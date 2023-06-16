@@ -296,6 +296,7 @@ class LockViewersComponent extends Component {
                         showToggleLabel={showToggleLabel}
                         invertColors={invertColors}
                         data-test="lockPrivateChat"
+		        disabled={true}
                       />
                     </Styled.FormElementRight>
                   </Styled.Col>

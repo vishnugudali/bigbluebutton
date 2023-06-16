@@ -499,6 +499,7 @@ class UserListItem extends PureComponent {
         },
         icon: userLocked ? 'unlock' : 'lock',
         dataTest: 'unlockUserButton',
+	disabled: true,
       },
       {
         allowed: allowUserLookup && isMeteorConnected && !showNestedOptions,

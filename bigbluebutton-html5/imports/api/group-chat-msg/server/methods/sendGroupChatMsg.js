@@ -4,6 +4,7 @@ import RedisPubSub from '/imports/startup/server/redis';
 import RegexWebUrl from '/imports/utils/regex-weburl';
 import { extractCredentials } from '/imports/api/common/server/helpers';
 import Logger from '/imports/startup/server/logger';
+import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
 
 const HTML_SAFE_MAP = {
   '<': '&lt;',
@@ -24,6 +25,8 @@ const parseMessage = (message) => {
 
   // Replace flash links to flash valid ones
   parsedMessage = parsedMessage.replace(RegexWebUrl, "<a href='event:$&'><u>$&</u></a>");
+    //CNX-Avalon masking
+  parsedMessage = cnxAvalonUtils.avalonMask(parsedMessage);
 
   return parsedMessage;
 };

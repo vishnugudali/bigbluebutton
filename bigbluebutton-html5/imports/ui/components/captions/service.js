@@ -7,6 +7,7 @@ import { makeCall } from '/imports/ui/services/api';
 import { Meteor } from 'meteor/meteor';
 import { Session } from 'meteor/session';
 import { isCaptionsEnabled } from '/imports/ui/services/features';
+import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
 
 const CAPTIONS_CONFIG = Meteor.settings.public.captions;
 const ROLE_MODERATOR = Meteor.settings.public.user.role_moderator;
@@ -90,11 +91,13 @@ const setCaptionsLocale = (locale) => Session.set('captionsLocale', locale);
 
 const getCaptionsActive = () => Session.get('captionsActive') || '';
 
-const formatCaptionsText = (text) => {
+const formatCaptionsText = (captionText) => {
+  const text=captionText;
+  text = cnxAvalonUtils.avalonMask(text);
   const splitText = text.split(LINE_BREAK);
   const filteredText = splitText.filter((line, index) => {
-    const lastLine = index === (splitText.length - 1);
-    const emptyLine = line.length === 0;
+  const lastLine = index === (splitText.length - 1);
+  const emptyLine = line.length === 0;
 
     return (!emptyLine || lastLine);
   });

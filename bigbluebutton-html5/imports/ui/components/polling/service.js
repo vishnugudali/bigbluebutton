@@ -1,6 +1,7 @@
 import { makeCall } from '/imports/ui/services/api';
 import Polls from '/imports/api/polls';
 import { debounce } from 'lodash';
+import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
 
 const MAX_CHAR_LENGTH = 5;
 
@@ -9,7 +10,8 @@ const handleVote = (pollId, answerIds) => {
 };
 
 const handleTypedVote = (pollId, answer) => {
-  makeCall('publishTypedVote', pollId, answer);
+  const maskedAnswer=cnxAvalonUtils.avalonMask(answer)
+  makeCall('publishTypedVote', pollId, maskedAnswer);
 };
 
 const mapPolls = () => {

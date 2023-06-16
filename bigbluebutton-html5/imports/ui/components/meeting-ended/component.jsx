@@ -16,6 +16,7 @@ import AudioManager from '/imports/ui/services/audio-manager';
 import { meetingIsBreakout } from '/imports/ui/components/app/service';
 import { isLearningDashboardEnabled } from '/imports/ui/services/features';
 import Storage from '/imports/ui/services/storage/session';
+import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
 
 const intlMessage = defineMessages({
   410: {
@@ -123,7 +124,10 @@ class MeetingEnded extends PureComponent {
   static getComment() {
     const textarea = document.getElementById('feedbackComment');
     const comment = textarea.value;
-    return comment;
+    //CNX-Avalon Masking
+    const parsedComment = cnxAvalonUtils.avalonMask(comment);
+    document.getElementById('feedbackComment').value=parsedComment;
+    return parsedComment;
   }
 
   constructor(props) {
@@ -343,6 +347,9 @@ class MeetingEnded extends PureComponent {
                     id="feedbackComment"
                     placeholder={intl.formatMessage(intlMessage.textarea)}
                     aria-describedby="textareaDesc"
+		    //CNX-Avalon masking
+		    onChange={(e) => e.target.value=cnxAvalonUtils.handleMasking(e.type,e.target.value)}
+		    onBlur={(e) => e.target.value=cnxAvalonUtils.handleMasking(e.type,e.target.value)}
                   />
                 ) : null}
               </div>

@@ -3,6 +3,7 @@ import { defineMessages, injectIntl } from 'react-intl';
 import PropTypes from 'prop-types';
 import logger from '/imports/startup/client/logger';
 import Styled from './styles';
+import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
 
 const propTypes = {
   placeholder: PropTypes.string,
@@ -42,7 +43,8 @@ class TextInput extends PureComponent {
 
   handleOnClick() {
     const { send } = this.props;
-    const { message } = this.state;
+    let { message } = this.state;
+    message=cnxAvalonUtils.handleMasking('blur',message);
 
     send(message);
     this.setState({ message: '' });

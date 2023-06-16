@@ -48,7 +48,7 @@ public:
     learningDashboardBase: '/learning-analytics-dashboard'
     # Use https URL of CSS file. Example: https://docs.bigbluebutton.org/admin/customize.html#examples
     customStyleUrl: null
-    askForFeedbackOnLogout: false
+    askForFeedbackOnLogout: true
     # the default logoutUrl matches window.location.origin i.e. bigbluebutton.org for demo.bigbluebutton.org
     # in some cases we want only custom logoutUrl to be used when provided on meeting create. Default value: true
     allowDefaultLogoutUrl: true
@@ -219,7 +219,7 @@ public:
   externalVideoPlayer:
     enabled: true
   kurento:
-    wsUrl: HOST
+    wsUrl: wss://dev.cnxmeeting.com/bbb-webrtc-sfu
     # Valid for video-provider. Time (ms) before its WS connection times out
     # and tries to reconnect.
     wsConnectionTimeout: 4000
@@ -564,7 +564,7 @@ public:
     # Number of reconnection attempts of the signaling websocket, before
     # showing to the user there's an audio error.
     audioReconnectionAttempts: 3
-    sipjsHackViaWs: false
+    sipjsHackViaWs: true
     # the fqdn of this host.
     # If you run a traditional setup of multiple nodes behind scalelite and the users see the hostnames of the
     # individual nodes, you can leave this at the default setting
@@ -764,7 +764,7 @@ public:
       flushOnClose: true
       logTag: ''
   virtualBackgrounds:
-    enabled: true
+    enabled: false
     storedOnBBB: true
     showThumbnails: true
     imagesPath: /resources/images/virtual-backgrounds/
