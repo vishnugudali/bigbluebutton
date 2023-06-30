@@ -5,8 +5,8 @@ const avalonMask = (parsedMessage) => {
 	//maskedtext = maskedtext.replace(/\d/gi, 'X');
 	maskedtext=cnxCCValidation.maskCreditCard(maskedtext);
   	//CNX Apple/Avalon/email masking
-  	maskedtext = maskedtext.replace(/apple/gi, 'XXXXX');
-  	maskedtext = maskedtext.replace(/avalon/gi, 'XXXXX');
+  	//maskedtext = maskedtext.replace(/apple/gi, 'XXXXX');
+  	//maskedtext = maskedtext.replace(/avalon/gi, 'XXXXX');
   	//maskedtext = maskedtext.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+)/g, "*****@*****.***");
 	maskedtext = maskedtext.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+)/g, "*****@*****.**.**");
         maskedtext = maskedtext.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+[a-zA-Z0-9_-]+[a-zA-Z0-9_-]+)/g, "*****@*****.***");
@@ -18,8 +18,8 @@ const avalonMasking = (parsedMessage,eventType) => {
      //maskedtext = maskedtext.replace(/\d/gi, 'X');
      maskedtext=cnxCCValidation.maskCreditCard(maskedtext);
      //CNX Apple/Avalon/email masking
-     maskedtext = maskedtext.replace(/apple/gi, 'XXXXX');
-     maskedtext = maskedtext.replace(/avalon/gi, 'XXXXX');
+     //maskedtext = maskedtext.replace(/apple/gi, 'XXXXX');
+     //maskedtext = maskedtext.replace(/avalon/gi, 'XXXXX');
      if(eventType ==='change'){
        maskedtext = maskedtext.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+[^a-zA-Z0-9_-]$)/g, "*****@*****.**.**");
        maskedtext = maskedtext.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+[a-zA-Z0-9_-]+[a-zA-Z0-9_-]+[^a-zA-Z0-9_-]$)/g, "*****@*****.***");
