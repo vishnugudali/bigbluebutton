@@ -44,9 +44,7 @@ class TextInput extends PureComponent {
   handleOnClick() {
     const { send } = this.props;
     let { message } = this.state;
-    message=cnxAvalonUtils.handleMasking('blur',message);
-
-    send(message);
+    send(cnxAvalonUtils.handleMasking(' ',message));
     this.setState({ message: '' });
   }
 

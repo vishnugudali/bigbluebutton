@@ -226,7 +226,6 @@ class Poll extends Component {
     this.handleInputChange = this.handleInputChange.bind(this);
     this.toggleIsMultipleResponse = this.toggleIsMultipleResponse.bind(this);
     this.displayToggleStatus = this.displayToggleStatus.bind(this);
-    this.handleInputOnBlur = this.handleInputOnBlur.bind(this);
   }
 
   componentDidMount() {
@@ -271,10 +270,6 @@ class Poll extends Component {
       document.activeElement.blur();
     });
   }
-  handleInputOnBlur(e, index) {
-    e.target.value= cnxAvalonUtils.handleMasking(e.type,e.target.value)
-    this.handleInputTextChange(index, e.target.value)
-  }
 
   handleInputTextChange(index, text) {
     const { optList } = this.state;
@@ -291,8 +286,7 @@ class Poll extends Component {
     const { optList, type, error } = this.state;
     const { pollTypes } = this.props;
     const list = [...optList];
-    let  validatedVal = validateInput(e.target.value).replace(/\s{2,}/g, ' ');
-    validatedVal=cnxAvalonUtils.handleMasking(e.type,validatedVal);
+    const validatedVal = validateInput(e.target.value).replace(/\s{2,}/g, ' ');
     const charsRemovedCount = e.target.value.length - validatedVal.length;
     const clearError = validatedVal.length > 0 && type !== pollTypes.Response;
     const input = e.target;
@@ -316,14 +310,8 @@ class Poll extends Component {
     const { type, error } = this.state;
     const { pollTypes } = this.props;
     const validatedQuestion = validateInput(e.target.value);
-    let maskedQuestion='';
-    let maskedText='';
-    if(validatedQuestion && validatedQuestion !== ''){
-      maskedText=cnxAvalonUtils.handleMasking(e.type,validatedQuestion);
-    }
-    maskedQuestion=maskedText;
-    const clearError = maskedQuestion.length > 0 && type === pollTypes.Response;
-    this.setState({ question: validateInput(maskedQuestion), error: clearError ? null : error });
+    const clearError = validatedQuestion.length > 0 && type === pollTypes.Response;
+    this.setState({ question: validateInput(e.target.value), error: clearError ? null : error });
   }
 
   handlePollValuesText(text) {
@@ -421,7 +409,6 @@ class Poll extends Component {
               placeholder={intl.formatMessage(intlMessages.customPlaceholder)}
               data-test="pollOptionItem"
               onChange={(e) => this.handleInputChange(e, i)}
-	      onBlur={(e) => this.handleInputOnBlur(e, i)}
               maxLength={MAX_INPUT_CHARS}
             />
             {i > 1
@@ -514,7 +501,6 @@ class Poll extends Component {
             data-test="pollQuestionArea"
             value={question}
             onChange={(e) => this.handleTextareaChange(e)}
-	    onBlur={(e) => this.handleTextareaChange(e)}
             rows="4"
             cols="35"
             maxLength={QUESTION_MAX_INPUT_CHARS}
@@ -696,6 +682,10 @@ class Poll extends Component {
                         if (err) return this.setState({ error: err });
 
                         return this.setState({ isPolling: true }, () => {
+                          var validatedQuestion = '';
+                          if(question.trim() !== ''){
+                            validatedQuestion = cnxAvalonUtils.handleMasking('',question)
+                          }
                           const verifiedPollType = checkPollType(
                             type,
                             optList,
@@ -706,19 +696,19 @@ class Poll extends Component {
                             intl.formatMessage(intlMessages.false),
                           );
                           const verifiedOptions = optList.map((o) => {
-                            if (o.val.length > 0) return o.val;
+                            if (o.val.length > 0) return cnxAvalonUtils.handleMasking('',o.val);
                             return null;
                           });
                           if (verifiedPollType === pollTypes.Custom) {
                             startCustomPoll(
                               verifiedPollType,
                               secretPoll,
-                              question,
+                              validatedQuestion,
                               isMultipleResponse,
                               _.compact(verifiedOptions),
                             );
                           } else {
-                            startPoll(verifiedPollType, secretPoll, question, isMultipleResponse);
+                            startPoll(verifiedPollType, secretPoll, validatedQuestion, isMultipleResponse);
                           }
                         });
                       }}

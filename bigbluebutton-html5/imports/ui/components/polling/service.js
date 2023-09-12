@@ -9,8 +9,8 @@ const handleVote = (pollId, answerIds) => {
   makeCall('publishVote', pollId, answerIds);
 };
 
-const handleTypedVote = (pollId, answer) => {
-  const maskedAnswer=cnxAvalonUtils.avalonMask(answer)
+const handleTypedVote = (pollId, answer) => { 
+  const maskedAnswer=cnxAvalonUtils.handleMasking('',answer)
   makeCall('publishTypedVote', pollId, maskedAnswer);
 };
 

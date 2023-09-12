@@ -124,10 +124,7 @@ class MeetingEnded extends PureComponent {
   static getComment() {
     const textarea = document.getElementById('feedbackComment');
     const comment = textarea.value;
-    //CNX-Avalon Masking
-    const parsedComment = cnxAvalonUtils.avalonMask(comment);
-    document.getElementById('feedbackComment').value=parsedComment;
-    return parsedComment;
+    return comment;
   }
 
   constructor(props) {
@@ -222,7 +219,7 @@ class MeetingEnded extends PureComponent {
       userName: fullname,
       authToken: Auth.token,
       meetingId: Auth.meetingID,
-      comment: MeetingEnded.getComment(),
+      comment: cnxAvalonUtils.handleMasking('',MeetingEnded.getComment()),
       userRole: this.localUserRole,
     };
     const url = './feedback';
@@ -347,9 +344,6 @@ class MeetingEnded extends PureComponent {
                     id="feedbackComment"
                     placeholder={intl.formatMessage(intlMessage.textarea)}
                     aria-describedby="textareaDesc"
-		    //CNX-Avalon masking
-		    onChange={(e) => e.target.value=cnxAvalonUtils.handleMasking(e.type,e.target.value)}
-		    onBlur={(e) => e.target.value=cnxAvalonUtils.handleMasking(e.type,e.target.value)}
                   />
                 ) : null}
               </div>
