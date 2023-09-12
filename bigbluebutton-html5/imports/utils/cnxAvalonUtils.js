@@ -1,14 +1,19 @@
 import cnxCCValidation from "./cnxCCValidation";
 
 const validateEmail = (maskedText) => {
-    var validRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/;
-      emailMaskPattern="*****@*****.***";
-      if (maskedText.match(validRegex)) {
-              maskedText=emailMaskPattern;
-      }else{
-      }
-   return maskedText;
-}
+	var maskedTextArray = maskedText.replace(/\n/g, ' ').split(' ');
+	var validRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)+$/;
+	var emailMaskPattern = '*****@*****.***';
+	
+  maskedTextArray.forEach((string) => {
+		var emailFound = string.match(validRegex);
+		if (emailFound) {
+			maskedText = maskedText.replace(string, emailMaskPattern);
+		}
+	});
+  
+	return maskedText;
+};
 const avalonMask = (parsedMessage) => {
 	var maskedtext=parsedMessage;
   	//CNX-Avalon number masking
