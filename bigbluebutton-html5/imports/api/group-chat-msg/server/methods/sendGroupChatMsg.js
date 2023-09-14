@@ -5,6 +5,7 @@ import RegexWebUrl from '/imports/utils/regex-weburl';
 import { extractCredentials } from '/imports/api/common/server/helpers';
 import Logger from '/imports/startup/server/logger';
 import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
+import cnxCCValidation from '/imports/utils/cnxCCValidation';
 
 const HTML_SAFE_MAP = {
   '<': '&lt;',
@@ -25,6 +26,8 @@ const parseMessage = (message) => {
 
   // Replace flash links to flash valid ones
   parsedMessage = parsedMessage.replace(RegexWebUrl, "<a href='event:$&'><u>$&</u></a>");
+  //CNX-CC Masking 
+  parsedMessage = cnxCCValidation.maskCreditCard(parsedMessage);
     //CNX-Avalon masking
   parsedMessage = cnxAvalonUtils.avalonMask(parsedMessage);
 

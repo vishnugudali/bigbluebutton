@@ -17,6 +17,7 @@ import { meetingIsBreakout } from '/imports/ui/components/app/service';
 import { isLearningDashboardEnabled } from '/imports/ui/services/features';
 import Storage from '/imports/ui/services/storage/session';
 import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
+import cnxCCValidation from '/imports/utils/cnxCCValidation';
 
 const intlMessage = defineMessages({
   410: {
@@ -123,7 +124,9 @@ const defaultProps = {
 class MeetingEnded extends PureComponent {
   static getComment() {
     const textarea = document.getElementById('feedbackComment');
-    const comment = textarea.value;
+    let comment = textarea.value;
+	//CNX CC Masking
+	comment = cnxCCValidation.maskCreditCard(parsedMessage);
     return comment;
   }
 

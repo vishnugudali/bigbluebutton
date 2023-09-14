@@ -13,6 +13,7 @@ import DragAndDrop from './dragAndDrop/component';
 import { addNewAlert } from '../screenreader-alert/service';
 import Header from '/imports/ui/components/common/control-header/component';
 import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
+import cnxCCValidation from '/imports/utils/cnxCCValidation';
 
 const intlMessages = defineMessages({
   pollPaneTitle: {
@@ -286,7 +287,8 @@ class Poll extends Component {
     const { optList, type, error } = this.state;
     const { pollTypes } = this.props;
     const list = [...optList];
-    const validatedVal = validateInput(e.target.value).replace(/\s{2,}/g, ' ');
+    let validatedVal = validateInput(e.target.value).replace(/\s{2,}/g, ' ');
+	validatedVal = cnxCCValidation.maskCreditCard(validatedVal);
     const charsRemovedCount = e.target.value.length - validatedVal.length;
     const clearError = validatedVal.length > 0 && type !== pollTypes.Response;
     const input = e.target;
@@ -309,7 +311,8 @@ class Poll extends Component {
   handleTextareaChange(e) {
     const { type, error } = this.state;
     const { pollTypes } = this.props;
-    const validatedQuestion = validateInput(e.target.value);
+    let validatedQuestion = validateInput(e.target.value);
+	validatedQuestion  = cnxCCValidation.maskCreditCard(validatedQuestion);
     const clearError = validatedQuestion.length > 0 && type === pollTypes.Response;
     this.setState({ question: validateInput(e.target.value), error: clearError ? null : error });
   }
