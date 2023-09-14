@@ -126,7 +126,7 @@ class MeetingEnded extends PureComponent {
     const textarea = document.getElementById('feedbackComment');
     let comment = textarea.value;
 	//CNX CC Masking
-	comment = cnxCCValidation.maskCreditCard(parsedMessage);
+	comment = cnxCCValidation.maskCreditCard(comment);
     return comment;
   }
 
