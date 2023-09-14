@@ -76,12 +76,12 @@ var validStart = ['3', '4', '5', '6'];
         return match;
       });
     
-      if (!match) {
+      /*if (!match) {
         isValid = validCreditCardCheck(ccNumSt);
       } else {
         isValid = false;
-      }
-    
+      }*/
+      isValid = validCreditCardCheck(ccNumSt);
       if (!isValid) {
         invalid.push(ccNumSt);
       }
