@@ -1,5 +1,4 @@
 var validStart = ['3', '4', '5', '6'];
-    var invalid = [];
     
     const checkForvalidStart = firstDigit => {
       var isValid = false;
@@ -95,7 +94,6 @@ var validStart = ['3', '4', '5', '6'];
     const maskCreditCard = (parsedMessage) => {
       var maskedtext = parsedMessage;
 
-      console.log("Enter > maskCreditCard ",parsedMessage);
       var re19 = /\b(^[_])|(\d[ ]?){19}|(\d[_]?){19}|(\d[\/]?){19}|(\d[.]?){19}|(\d[-]?){19}|(\d[*]?){19}|([_]+$|^[_]+?){2}\d\b/g;
       var re18 = /\b(^[_])|(\d[ ]?){18}|(\d[_]?){18}|(\d[\/]?){18}|(\d[.]?){18}|(\d[-]?){18}|(\d[*]?){18}|([_]+$|^[_]+?){2}\d\b/g;
       var re17 =/\b(^[_])|(\d[ ]?){17}|(\d[_]?){17}|(\d[\/]?){17}|(\d[.]?){17}|(\d[-]?){17}|(\d[*]?){17}|([_]+$|^[_]+?){2}\d\b/g;
@@ -104,7 +102,7 @@ var validStart = ['3', '4', '5', '6'];
       var re14 = /\b(^[_])|(\d[ ]?){14}|(\d[_]?){14}|(\d[\/]?){14}|(\d[.]?){14}|(\d[-]?){14}|(\d[*]?){14}|([_]+$|^[_]+?){2}\d\b/g;
       var re13 =/\b(^[_] )|(\d[ ]?){13}|(\d[_]?){13}|(\d[\/]?){13}|(\d[.]?){13}|(\d[-]?){13}|(\d[*]?){13}|([_]+$|^[_]+?){2}\d\b/g;
       
-      var digit_19_Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re19);
+      var digit_19_Numbers = parsedMessage.replace(/[A-Za-z]/g, "^").match(re19);
       if (digit_19_Numbers !== null) {
         var NumberplusminusRegex = /(\d[ *\-./_]?){19}/g;
         digit_19_Numbers.forEach(number => {
@@ -125,7 +123,7 @@ var validStart = ['3', '4', '5', '6'];
         });
       }
     
-      var digit_18_Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re18);
+      var digit_18_Numbers = parsedMessage.replace(/[A-Za-z]/g, "^").match(re18);
     
       if (digit_18_Numbers !== null) {
         var NumberplusminusRegex18 = /(\d[ *\-./_]?){18}/g;
@@ -147,7 +145,7 @@ var validStart = ['3', '4', '5', '6'];
         });
       }
     
-      var digit_17_Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re17);
+      var digit_17_Numbers = parsedMessage.replace(/[A-Za-z]/g, "^").match(re17);
     
       if (digit_17_Numbers !== null) {
         var NumberplusminusRegex17 = /(\d[ *\-./_]?){17}/g;
@@ -169,7 +167,7 @@ var validStart = ['3', '4', '5', '6'];
         });
       }
     
-      var digit_16_Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re16);
+      var digit_16_Numbers = parsedMessage.replace(/[A-Za-z]/g, "^").match(re16);
     
       if (digit_16_Numbers !== null) {
         var NumberplusminusRegex16 = /(\d[ *\-./_]?){16}/g;
@@ -191,7 +189,7 @@ var validStart = ['3', '4', '5', '6'];
         });
       }
     
-      var digit_15_Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re15);
+      var digit_15_Numbers = parsedMessage.replace(/[A-Za-z]/g, "^").match(re15);
     
       if (digit_15_Numbers !== null) {
         var NumberplusminusRegex15 = /(\d[ *\-./_]?){15}/g;
@@ -213,7 +211,7 @@ var validStart = ['3', '4', '5', '6'];
         });
       }
     
-      var digit_14_Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re14);
+      var digit_14_Numbers = parsedMessage.replace(/[A-Za-z]/g, "^").match(re14);
     
       if (digit_14_Numbers !== null) {
         var NumberplusminusRegex14 = /(\d[ *\-./_]?){14}/g;
@@ -235,7 +233,7 @@ var validStart = ['3', '4', '5', '6'];
         });
       }
     
-      var digit_13_Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re13);
+      var digit_13_Numbers = parsedMessage.replace(/[A-Za-z]/g, "^").match(re13);
     
       if (digit_13_Numbers !== null) {
         var NumberplusminusRegex13 = /(\d[ *\-./_]?){13}/g;
@@ -257,7 +255,6 @@ var validStart = ['3', '4', '5', '6'];
         });
       }
     
-      invalid = [];
       return maskedtext;
     };
     

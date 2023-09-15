@@ -314,8 +314,9 @@ class Poll extends Component {
     let validatedQuestion = validateInput(e.target.value);
 	validatedQuestion  = cnxCCValidation.maskCreditCard(validatedQuestion);
     const clearError = validatedQuestion.length > 0 && type === pollTypes.Response;
-    this.setState({ question: validateInput(e.target.value), error: clearError ? null : error });
+    this.setState({ question: validatedQuestion, error: clearError ? null : error });
   }
+
 
   handlePollValuesText(text) {
     if (text && text.length > 0) {
