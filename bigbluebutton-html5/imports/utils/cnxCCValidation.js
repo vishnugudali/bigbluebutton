@@ -66,9 +66,10 @@ var validStart = ['3', '4', '5', '6'];
       if (!checkForvalidStart(firstDigit)) {
         return false;
       }
-    
+    /*
       var match = false;
       invalid.map(element => {
+      
         if (element.includes(ccNumSt)) {
           match = true;
         }
@@ -76,30 +77,34 @@ var validStart = ['3', '4', '5', '6'];
         return match;
       });
     
-      /*if (!match) {
+      if (!match) {
         isValid = validCreditCardCheck(ccNumSt);
       } else {
         isValid = false;
       }*/
+
       isValid = validCreditCardCheck(ccNumSt);
+      /*
       if (!isValid) {
         invalid.push(ccNumSt);
       }
-    
+    */
       return isValid;
     };
     
-    const maskCreditCard = parsedMessage => {
+    const maskCreditCard = (parsedMessage) => {
       var maskedtext = parsedMessage;
-      var re19 = /\b(^[_]){19}|(\d[ *-./_]?){19}|([_]+$|^[_]+?){19}\d\b/g;
-      var re18 = /\b(^[_]){18}|(\d[ *-./_]?){18}|([_]+$|^[_]+?){18}\d\b/g;
-      var re17 = /\b(^[_]){17}|(\d[ *-./_]?){17}|([_]+$|^[_]+?){17}\d\b/g;
-      var re16 = /\b(^[_]){16}|(\d[ *-./_]?){16}|([_]+$|^[_]+?){16}\d\b/g;
-      var re15 = /\b(^[_]){15}|(\d[ *-./_]?){15}|([_]+$|^[_]+?){15}\d\b/g;
-      var re14 = /\b(^[_]){14}|(\d[ *-./_]?){14}|([_]+$|^[_]+?){14}\d\b/g;
-      var re13 = /\b(^[_]){13}|(\d[ *-./_]?){13}|([_]+$|^[_]+?){13}\d\b/g;
+
+      console.log("Enter > maskCreditCard ",parsedMessage);
+      var re19 = /\b(^[_])|(\d[ ]?){19}|(\d[_]?){19}|(\d[\/]?){19}|(\d[.]?){19}|(\d[-]?){19}|(\d[*]?){19}|([_]+$|^[_]+?){2}\d\b/g;
+      var re18 = /\b(^[_])|(\d[ ]?){18}|(\d[_]?){18}|(\d[\/]?){18}|(\d[.]?){18}|(\d[-]?){18}|(\d[*]?){18}|([_]+$|^[_]+?){2}\d\b/g;
+      var re17 =/\b(^[_])|(\d[ ]?){17}|(\d[_]?){17}|(\d[\/]?){17}|(\d[.]?){17}|(\d[-]?){17}|(\d[*]?){17}|([_]+$|^[_]+?){2}\d\b/g;
+      var re16 = /\b(^[_^])|(\d[ ]?){16}|(\d[_]?){16}|(\d[\/]?){16}|(\d[.]?){16}|(\d[-]?){16}|(\d[*]?){16}|([_]+$|^[_]+?){2}\d\b/g;
+      var re15 = /\b(^[_])|(\d[ ]?){15}|(\d[_]?){15}|(\d[\/]?){15}|(\d[.]?){15}|(\d[-]?){15}|(\d[*]?){15}|([_]+$|^[_]+?){2}\d\b/g;
+      var re14 = /\b(^[_])|(\d[ ]?){14}|(\d[_]?){14}|(\d[\/]?){14}|(\d[.]?){14}|(\d[-]?){14}|(\d[*]?){14}|([_]+$|^[_]+?){2}\d\b/g;
+      var re13 =/\b(^[_] )|(\d[ ]?){13}|(\d[_]?){13}|(\d[\/]?){13}|(\d[.]?){13}|(\d[-]?){13}|(\d[*]?){13}|([_]+$|^[_]+?){2}\d\b/g;
+      
       var digit_19_Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re19);
-    
       if (digit_19_Numbers !== null) {
         var NumberplusminusRegex = /(\d[ *\-./_]?){19}/g;
         digit_19_Numbers.forEach(number => {
