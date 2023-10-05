@@ -2,64 +2,98 @@
 /**
  * This function masks email addresses in a given string based on specified criteria:
  * 1. It masks only email addresses with specific domain extensions (e.g., .com, .org, .net, etc.).
- * 2. The prefix of the email (i.e., the part before the '@' symbol) should only start and end with alphanumeric characters.
+ * 2. The prefix of the email (i.e., 1-3 characters before the '@' symbol) should only start and end with alphanumeric characters.
  *    The middle of the prefix can contain the characters '.', '-', or '_', but cannot have two consecutive occurrences of any of these characters.
  * 3. The email address to be masked should either start the string, or be preceded by a space. It should not be followed directly by an alphanumeric character.
- *
+ * 4. if prefix is 3 length then the pattern will be ***@*****.*** for prefix length 2 or 1 then the pattern will be **@*****.***
  * @param {string} input - The input string possibly containing emails to be masked.
  * @returns {string} - The input string with emails masked based on the criteria.
  */
+
+const validExtensions = ['com', 'coop', 'int', 'org', 'net', 'info', 'biz', 'us', 'uk', 'ca', 'au', 'de', 'gov', 'edu', 'mil', 'in', 'co', 'app', 'blog', 'tech', 'guru'];
+
+const startsWithAny = (str, prefixes) => {
+  for (let i = 0; i < prefixes.length; i += 1) {
+    if (str.startsWith(prefixes[i])) {
+      return [true, prefixes[i]];
+    }
+  }
+  return false;
+};
+
+const endsWithAny = (str, prefixes) => {
+  for (let i = 0; i < prefixes.length; i += 1) {
+    if (str.endsWith(prefixes[i])) {
+      return true;
+    }
+  }
+  return false;
+};
+
+const hasContinuousSpecialChars = (inputString) => {
+  // to check whether the email prefix has repeated (.,-._) spl char: returns true if it is
+  const pattern = /([a-zA-Z0-9][._-]?){2}@/g;
+  return pattern.test(`${inputString}@`);
+};
+const maskEmail = (regexStr, inputString, i) => {
+  const inputresult = inputString.replace(regexStr, (match, prefix) => {
+    const emailPrefix = match.split('@')[0];
+    const isPrefixEndsWithSplChar = endsWithAny(emailPrefix, ['.', '_', '-']);
+    const isPrefixStartsWithSplChar = startsWithAny(emailPrefix, ['.', '_', '-'])[0];
+
+    let hasNodoubleSplChar = true;
+    if (i === 3) hasNodoubleSplChar = hasContinuousSpecialChars(emailPrefix);
+    const domainname = prefix.split('.')[0] !== undefined ? prefix.split('.')[0] : ' ';
+    const level1ext = prefix.split('.')[1] !== undefined ? prefix.split('.')[1] : ' ';
+    const level2ext = prefix.split('.')[2] !== undefined ? prefix.split('.')[2] : ' ';
+    const isDomainEndsWithSplChar = startsWithAny(domainname, ['-'])[0];
+    if (!isPrefixStartsWithSplChar
+        && !isPrefixEndsWithSplChar
+        && hasNodoubleSplChar
+        && !isDomainEndsWithSplChar) {
+      let secondExt = '';
+      let firstExt = '';
+      let findemail = `${emailPrefix}@${domainname}`;
+      let pattern = i === 3 ? '***@*****' : '**@*****'; // +"."+firstExt+"."+secondExt
+      const level1extfound = startsWithAny(level1ext, validExtensions)[1];
+      firstExt = level1ext.replace(level1extfound, '***');
+      if (level1extfound) {
+        findemail = `${findemail}.${level1ext}`;
+        pattern = `${pattern}.${firstExt}`;
+      }
+      if (level2ext !== ' ' && validExtensions.includes(level1ext)) {
+        const level2extfound = startsWithAny(level2ext, validExtensions)[1];
+        secondExt = level2ext.replace(level2extfound, '***');
+        findemail = `${findemail}.${level2ext}`;
+        pattern = `${pattern}.${secondExt}`;
+      }
+      if (level1extfound) {
+        return match.replace(findemail, pattern);
+      }
+      return match;
+    }
+    return match;
+  });
+  return inputresult;
+};
 const validateEmail = (input) => {
-  // Regular expression to capture valid email addresses:
-  // - It starts with either a space or the beginning of the string.
-  // - The prefix starts and ends with alphanumeric characters. It can also contain '.', '_', and '-'.
-  // - The domain part of the email can end with specified domain extensions.
-  // - The email is not directly followed by an alphanumeric character.
-  // const emailRegex = /(\w[._-]?){3}@([a-zA-Z0-9.-]*?\.(com|co|co\.in|org|net|info|biz|us|uk|ca|au|de|gov|edu|mil|int|coop|app|blog|tech|guru))(?![a-zA-Z0-9])/g;
+  let inputresult = input;
+  for (let i = 3; i >= 1; i -= 1) {
+    const regexGen = `[a-zA-Z0-9._-]{${i}}@([a-zA-Z0-9-]+(\\.[com|coop|co\\.in|org|net|info|biz|us|uk|ca|au|de|gov|edu|mil|int|co|app|blog|tech|guru]+))`;
+    const regex = new RegExp(regexGen, 'gm');
 
-  const validExtensions = ['com', 'co', 'in', 'org', 'net', 'info', 'biz', 'us', 'uk', 'ca', 'au', 'de', 'gov', 'edu', 'mil', 'int', 'coop', 'app', 'blog', 'tech', 'guru'];
-  const emailRegex = /([a-zA-Z0-9][._-]?){3}@([a-zA-Z0-9.-]+(\.[a-zA-Z]*))/g;
-  let inputresult = input.replace(emailRegex, (match, prefix, domain) => {
-    const level2ext = domain.split('.')[2] !== undefined ? domain.split('.')[2] : ' ';
-    const regex = /[a-zA-Z0-9._-]{3}@([a-zA-Z0-9.-]*?\.(com|co|co\.in|org|net|info|biz|us|uk|ca|au|de|gov|edu|mil|int|coop|app|blog|tech|guru))/g;
-    const prefixChar = match.match(regex);
-    if (prefixChar !== null && prefix.length !== 2) {
-      // prefix.length is 2 means there is a spl char at the end
-      if (validExtensions.includes(level2ext)) match = match.replace(level2ext, '***');
-      return match.replace(prefixChar[0], '***@*****.***');
+    inputresult = maskEmail(regex, inputresult, i);
+    if (i === 3) {
+      // double check and masking  needed for 3 length email
+      inputresult = maskEmail(regex, inputresult, i);
     }
-    return match;
-  });
-
-  const emailPattern = /([a-zA-Z0-9][._-]?){1,2}@([a-zA-Z0-9.-]+(\.[a-zA-Z]*))/g;
-  const validEmailRegex = /[a-zA-Z0-9._-]{1,2}@([a-zA-Z0-9.-]*?\.(com|co|co\.in|org|net|info|biz|us|uk|ca|au|de|gov|edu|mil|int|coop|app|blog|tech|guru))/g;
-  inputresult = inputresult.replace(emailPattern, (match, prefix, domain) => {
-    const level2ext = domain.split('.')[2] !== undefined ? domain.split('.')[2] : ' ';
-    const prefixChar = match.match(validEmailRegex);
-
-    if (prefixChar !== null && prefix.length !== 2) {
-      // eslint-disable-next-line no-param-reassign
-      if (validExtensions.includes(level2ext)) match = match.replace(level2ext, '***');
-      return match.replace(prefixChar[0], '**@*****.***');
-    }
-    return match;
-  });
+  }
   return inputresult;
 };
 
 const avalonMask = (parsedMessage) => {
   let maskedtext = parsedMessage;
   maskedtext = validateEmail(maskedtext);
-  return maskedtext;
-};
-const avalonMasking = (parsedMessage, eventType) => {
-  let maskedtext = parsedMessage;
-  if (eventType === 'change') {
-    maskedtext = maskedtext.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+[^a-zA-Z0-9_-]$)/g, '*****@*****.**.**');
-    maskedtext = maskedtext.replace(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9_-]+[a-zA-Z0-9_-]+[a-zA-Z0-9_-]+[^a-zA-Z0-9_-]$)/g, '*****@*****.***');
-  } else {
-    maskedtext = validateEmail(maskedtext);
-  }
   return maskedtext;
 };
 
