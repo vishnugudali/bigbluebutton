@@ -252,14 +252,14 @@ const maskCreditCard = (parsedMessage) => {
 		});
 	}
 
-	var regEx16 = /\b(\d{4}[ ]?){4}|(\d{4}[*]?){4}|(\d{4}[/]?){4}|(\d{4}[_]?){4}|(\d{4}[-]?){4}|(\d{4}[/]?){4}|(\d{4}[.]?){4}\b/gm;
-	var digit16NumberWithSpace = maskedtext.match(regEx16);
-	if (digit16NumberWithSpace !== null) {
-		digit16NumberWithSpace.forEach((number) => {
-			var ccNumber = number.replace(/\D/g, '');
-			maskedtext = maskedtext.replace(number, 'XXXX-XXXX-XXXX-' + ccNumber.substring(ccNumber.length - 4) + '  ');
-		});
-	}
+	// var regEx16 = /\b(\d{4}[ ]?){4}|(\d{4}[*]?){4}|(\d{4}[/]?){4}|(\d{4}[_]?){4}|(\d{4}[-]?){4}|(\d{4}[/]?){4}|(\d{4}[.]?){4}\b/gm;
+	// var digit16NumberWithSpace = maskedtext.match(regEx16);
+	// if (digit16NumberWithSpace !== null) {
+	// 	digit16NumberWithSpace.forEach((number) => {
+	// 		var ccNumber = number.replace(/\D/g, '');
+	// 		maskedtext = maskedtext.replace(number, 'XXXX-XXXX-XXXX-' + ccNumber.substring(ccNumber.length - 4) + '  ');
+	// 	});
+	// }
 	return maskedtext;
 };
 
