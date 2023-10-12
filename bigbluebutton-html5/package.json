@@ -24,8 +24,22 @@
   },
   "lint-staged": {
     "cnx/**/*.{js,jsx}": [
-      "eslint cnx/ --fix"
+      "eslint cnx/ --fix",
+      "jest --findRelatedTests --coverage"
     ]
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "cnx/**/*.{js,jsx}"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    }
   },
   "dependencies": {
     "@babel/runtime": "^7.22.5",
