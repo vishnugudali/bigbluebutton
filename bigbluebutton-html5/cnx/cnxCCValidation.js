@@ -88,7 +88,24 @@ const checkIsCreditCardNo = (value) => {
     */
   return isValid;
 };
-
+const maskNumbers = (maskedtext, numbersArray, regex, mask, showLastDigits) => {
+  numbersArray.forEach((number) => {
+    const ccNumber = number.replace(/\D/g, '');
+    if (number.match(regex)) {
+      const isCreditCard = checkIsCreditCardNo(ccNumber);
+      const revCCNumber = ccNumber.split('').reverse().join('');
+      const isCCNumberRevNumber = checkIsCreditCardNo(revCCNumber);
+      if (isCreditCard || isCCNumberRevNumber) {
+        if (Number.isNaN(number.slice(-1))) {
+          maskedtext = maskedtext.replace(number, `${mask}${ccNumber.substring(ccNumber.length - showLastDigits)}${number.slice(-1)} `);
+        } else {
+          maskedtext = maskedtext.replace(number, `${mask}${ccNumber.substring(ccNumber.length - showLastDigits)} `);
+        }
+      }
+    }
+  });
+  return maskedtext;
+};
 const maskCreditCard = (parsedMessage) => {
   let maskedtext = parsedMessage;
 
@@ -99,157 +116,53 @@ const maskCreditCard = (parsedMessage) => {
   const re15 = /\b(^[_])|(\d[ ]?){15}|(\d[_]?){15}|(\d[/]?){15}|(\d[.]?){15}|(\d[-]?){15}|(\d[*]?){15}|([_]+$|^[_]+?){2}\d\b/g;
   const re14 = /\b(^[_])|(\d[ ]?){14}|(\d[_]?){14}|(\d[/]?){14}|(\d[.]?){14}|(\d[-]?){14}|(\d[*]?){14}|([_]+$|^[_]+?){2}\d\b/g;
   const re13 = /\b(^[_] )|(\d[ ]?){13}|(\d[_]?){13}|(\d[/]?){13}|(\d[.]?){13}|(\d[-]?){13}|(\d[*]?){13}|([_]+$|^[_]+?){2}\d\b/g;
-  const digit19Numbers = parsedMessage.replace(/[A-Za-z]/g, '^').match(re19);
+
+  const digit19Numbers = parsedMessage.replace(/[A-Za-z]/g, "^").match(re19);
   if (digit19Numbers !== null) {
     const NumberplusminusRegex = /(\d[ *\-./_]?){19}/g;
-    digit19Numbers.forEach((number) => {
-      const ccNumber = number.replace(/\D/g, '');
-
-      if (number.match(NumberplusminusRegex)) {
-        const isCreditCard = checkIsCreditCardNo(ccNumber);
-        const revCCNumber = ccNumber.split('').reverse().join('');
-        const isCCNumberRevNumber = checkIsCreditCardNo(revCCNumber);
-        if (isCreditCard || isCCNumberRevNumber) {
-          if (Number.isNaN(number.slice(-1))) {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-XXXX-XXXX-${ccNumber.substring(ccNumber.length - 3)}${number.slice(-1)}`);
-          } else {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-XXXX-XXXX-${ccNumber.substring(ccNumber.length - 3)}`);
-          }
-        }
-      }
-    });
+    maskedtext = maskNumbers(maskedtext, digit19Numbers, NumberplusminusRegex, 'XXXX-XXXX-XXXX-XXXX-', 3);
   }
 
-  const digit18Numbers = parsedMessage.replace(/[A-Za-z]/g, '^').match(re18);
+  const digit18Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re18);
 
   if (digit18Numbers !== null) {
     const NumberplusminusRegex18 = /(\d[ *\-./_]?){18}/g;
-    digit18Numbers.forEach((number) => {
-      const ccNumber = number.replace(/\D/g, '');
-
-      if (number.match(NumberplusminusRegex18)) {
-        const isCreditCard = checkIsCreditCardNo(ccNumber);
-        const revCCNumber = ccNumber.split('').reverse().join('');
-        const isCCNumberRevNumber = checkIsCreditCardNo(revCCNumber);
-        if (isCreditCard || isCCNumberRevNumber) {
-          if (Number.isNaN(number.slice(-1))) {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-XXXXX-${ccNumber.substring(ccNumber.length - 5)}${number.slice(-1)}`);
-          } else {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-XXXXX-${ccNumber.substring(ccNumber.length - 5)}`);
-          }
-        }
-      }
-    });
+    maskedtext = maskNumbers(maskedtext, digit18Numbers, NumberplusminusRegex18, 'XXXX-XXXX-XXXXX-', 5);
   }
 
-  const digit17Numbers = parsedMessage.replace(/[A-Za-z]/g, '^').match(re17);
+  const digit17Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re17);
 
   if (digit17Numbers !== null) {
     const NumberplusminusRegex17 = /(\d[ *\-./_]?){17}/g;
-    digit17Numbers.forEach((number) => {
-      const ccNumber = number.replace(/\D/g, '');
-
-      if (number.match(NumberplusminusRegex17)) {
-        const isCreditCard = checkIsCreditCardNo(ccNumber);
-        const revCCNumber = ccNumber.split('').reverse().join('');
-        const isCCNumberRevNumber = checkIsCreditCardNo(revCCNumber);
-        if (isCreditCard || isCCNumberRevNumber) {
-          if (Number.isNaN(number.slice(-1))) {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-XXXX-${ccNumber.substring(ccNumber.length - 5)}${number.slice(-1)}`);
-          } else {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-XXXX-${ccNumber.substring(ccNumber.length - 5)}`);
-          }
-        }
-      }
-    });
+    maskedtext = maskNumbers(maskedtext, digit17Numbers, NumberplusminusRegex17, 'XXXX-XXXX-XXXX-', 5);
   }
 
-  const digit16Numbers = parsedMessage.replace(/[A-Za-z]/g, '^').match(re16);
+  const digit16Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re16);
 
   if (digit16Numbers !== null) {
     const NumberplusminusRegex16 = /(\d[ *\-./_]?){16}/g;
-    digit16Numbers.forEach((number) => {
-      const ccNumber = number.replace(/\D/g, '');
-
-      if (number.match(NumberplusminusRegex16)) {
-        const isCreditCard = checkIsCreditCardNo(ccNumber);
-        const revCCNumber = ccNumber.split('').reverse().join('');
-        const isCCNumberRevNumber = checkIsCreditCardNo(revCCNumber);
-        if (isCreditCard || isCCNumberRevNumber) {
-          if (Number.isNaN(number.slice(-1))) {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-XXXX-${ccNumber.substring(ccNumber.length - 4)}${number.slice(-1)}`);
-          } else {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-XXXX-${ccNumber.substring(ccNumber.length - 4)}`);
-          }
-        }
-      }
-    });
+    maskedtext = maskNumbers(maskedtext, digit16Numbers, NumberplusminusRegex16, 'XXXX-XXXX-XXXX-', 4);
   }
 
-  const digit15Numbers = parsedMessage.replace(/[A-Za-z]/g, '^').match(re15);
+  const digit15Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re15);
 
   if (digit15Numbers !== null) {
     const NumberplusminusRegex15 = /(\d[ *\-./_]?){15}/g;
-    digit15Numbers.forEach((number) => {
-      const ccNumber = number.replace(/\D/g, '');
-
-      if (number.match(NumberplusminusRegex15)) {
-        const isCreditCard = checkIsCreditCardNo(ccNumber);
-        const revCCNumber = ccNumber.split('').reverse().join('');
-        const isCCNumberRevNumber = checkIsCreditCardNo(revCCNumber);
-        if (isCreditCard || isCCNumberRevNumber) {
-          if (Number.isNaN(number.slice(-1))) {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-XXXX-${ccNumber.substring(ccNumber.length - 3)}${number.slice(-1)}`);
-          } else {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-XXXX-${ccNumber.substring(ccNumber.length - 3)}`);
-          }
-        }
-      }
-    });
+    maskedtext = maskNumbers(maskedtext, digit15Numbers, NumberplusminusRegex15, 'XXXX-XXXX-XXXX-', 3);
   }
 
-  const digit14Numbers = parsedMessage.replace(/[A-Za-z]/g, '^').match(re14);
+  const digit14Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re14);
 
   if (digit14Numbers !== null) {
     const NumberplusminusRegex14 = /(\d[ *\-./_]?){14}/g;
-    digit14Numbers.forEach((number) => {
-      const ccNumber = number.replace(/\D/g, '');
-
-      if (number.match(NumberplusminusRegex14)) {
-        const isCreditCard = checkIsCreditCardNo(ccNumber);
-        const revCCNumber = ccNumber.split('').reverse().join('');
-        const isCCNumberRevNumber = checkIsCreditCardNo(revCCNumber);
-        if (isCreditCard || isCCNumberRevNumber) {
-          if (Number.isNaN(number.slice(-1))) {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXXXX-${ccNumber.substring(ccNumber.length - 4)}${number.slice(-1)}`);
-          } else {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXXXX-${ccNumber.substring(ccNumber.length - 4)}`);
-          }
-        }
-      }
-    });
+    maskedtext = maskNumbers(maskedtext, digit14Numbers, NumberplusminusRegex14, 'XXXX-XXXXXX-', 4);
   }
 
-  const digit13Numbers = parsedMessage.replace(/[A-Za-z]/g, '^').match(re13);
+  const digit13Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re13);
 
   if (digit13Numbers !== null) {
     const NumberplusminusRegex13 = /(\d[ *\-./_]?){13}/g;
-    digit13Numbers.forEach((number) => {
-      const ccNumber = number.replace(/\D/g, '');
-
-      if (number.match(NumberplusminusRegex13)) {
-        const isCreditCard = checkIsCreditCardNo(ccNumber);
-        const revCCNumber = ccNumber.split('').reverse().join('');
-        const isCCNumberRevNumber = checkIsCreditCardNo(revCCNumber);
-        if (isCreditCard || isCCNumberRevNumber) {
-          if (Number.isNaN(number.slice(-1))) {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-${ccNumber.substring(ccNumber.length - 5)}${number.slice(-1)}`);
-          } else {
-            maskedtext = maskedtext.replace(number, `XXXX-XXXX-${ccNumber.substring(ccNumber.length - 5)}`);
-          }
-        }
-      }
-    });
+    maskedtext = maskNumbers(maskedtext, digit13Numbers, NumberplusminusRegex13, 'XXXX-XXXX-', 5);
   }
   return maskedtext;
 };
