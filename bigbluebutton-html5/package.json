@@ -11,8 +11,8 @@
     "test:recording": "export WITH_RECORD=true;export REGRESSION_TESTING=false;env $(cat ../bigbluebutton-tests/puppeteer/.env | xargs)  jest all.test.js --color --detectOpenHandles --forceExit",
     "test-visual-regression": "export REGRESSION_TESTING=true;env $(cat ../bigbluebutton-tests/puppeteer/.env | xargs)  jest all.test.js --color --detectOpenHandles --forceExit",
     "test-visual-regression:recording": "export WITH_RECORD=true;export REGRESSION_TESTING=true;env $(cat ../bigbluebutton-tests/puppeteer/.env | xargs)  jest all.test.js --color --detectOpenHandles --forceExit",
-    "lint": "eslint . --ext .jsx,.js",
-    "lint:file": "eslint",
+    "lint": "eslint cnx/ --ext .jsx,.js",
+    "lint:file": "eslint cnx/",
     "preinstall": "npx npm-force-resolutions"
   },
   "meteor": {
@@ -23,9 +23,26 @@
     }
   },
   "lint-staged": {
-    "*.{js,jsx}": [
-      "eslint --fix"
+    "cnx/**/*.{js,jsx}": [
+      "eslint cnx/ --fix",
+      "jest --findRelatedTests --coverage"
     ]
+  },
+  "jest": {
+    "collectCoverageFrom": [
+      "cnx/**/*.{js,jsx}"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 90,
+        "functions": 90,
+        "lines": 90,
+        "statements": 90
+      }
+    },
+    "transform": {
+      "^.+\\.[t|j]sx?$": "babel-jest"
+    }
   },
   "dependencies": {
     "@babel/runtime": "^7.22.5",
@@ -88,6 +105,9 @@
     "yaml": "^1.10.2"
   },
   "devDependencies": {
+    "@babel/core": "^7.23.2",
+    "@babel/preset-env": "^7.23.2",
+    "babel-jest": "^29.7.0",
     "chai": "~4.2.0",
     "eslint": "^7.32.0",
     "eslint-config-airbnb": "^18.2.1",

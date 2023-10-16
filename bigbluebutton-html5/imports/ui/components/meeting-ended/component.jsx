@@ -16,8 +16,8 @@ import AudioManager from '/imports/ui/services/audio-manager';
 import { meetingIsBreakout } from '/imports/ui/components/app/service';
 import { isLearningDashboardEnabled } from '/imports/ui/services/features';
 import Storage from '/imports/ui/services/storage/session';
-import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
-import cnxCCValidation from '/imports/utils/cnxCCValidation';
+import cnxAvalonUtils from '/cnx/cnxAvalonUtils';
+import cnxCCValidation from '/cnx/cnxCCValidation';
 
 const intlMessage = defineMessages({
   410: {
