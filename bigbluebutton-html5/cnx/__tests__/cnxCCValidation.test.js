@@ -55,7 +55,7 @@ describe('maskCreditCard', () => {
   // Mask a message with credit card numbers surrounded by different characters
   it('should mask credit card numbers surrounded by different characters', () => {
     const parsedMessage = 'This is a message with credit card numbers: [4012-8888-8888-1881], {1111 2222 3333 4444}, and *1111*2222*3333*4444*';
-    const expected = 'This is a message with credit card numbers: [XXXX-XXXX-XXXX-1881], {XXXX-XXXX-XXXX-4444}, and *XXXX-XXXX-XXXX-4444';
+    const expected = 'This is a message with credit card numbers: [XXXX-XXXX-XXXX-1881], {XXXX-XXXX-XXXX-4444}, and *XXXX-XXXX-XXXX-4444*';
     const result = maskCreditCard(parsedMessage);
     expect(result).toEqual(expected);
   });

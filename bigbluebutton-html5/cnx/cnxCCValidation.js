@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 const validStart = ['3', '4', '5', '6'];
 
 const checkForvalidStart = (firstDigit) => {
@@ -63,32 +64,13 @@ const checkIsCreditCardNo = (value) => {
   if (!checkForvalidStart(firstDigit)) {
     return false;
   }
-  /*
-      var match = false;
-      invalid.map(element => {
-
-        if (element.includes(ccNumSt)) {
-          match = true;
-        }
-
-        return match;
-      });
-
-      if (!match) {
-        isValid = validCreditCardCheck(ccNumSt);
-      } else {
-        isValid = false;
-      } */
 
   isValid = validCreditCardCheck(ccNumSt);
-  /*
-      if (!isValid) {
-        invalid.push(ccNumSt);
-      }
-    */
   return isValid;
 };
 const maskNumbers = (maskedtext, numbersArray, regex, mask, showLastDigits) => {
+  let result = maskedtext; // Make a copy of the input
+
   numbersArray.forEach((number) => {
     const ccNumber = number.replace(/\D/g, '');
     if (number.match(regex)) {
@@ -96,16 +78,17 @@ const maskNumbers = (maskedtext, numbersArray, regex, mask, showLastDigits) => {
       const revCCNumber = ccNumber.split('').reverse().join('');
       const isCCNumberRevNumber = checkIsCreditCardNo(revCCNumber);
       if (isCreditCard || isCCNumberRevNumber) {
-        if (Number.isNaN(number.slice(-1))) {
-          maskedtext = maskedtext.replace(number, `${mask}${ccNumber.substring(ccNumber.length - showLastDigits)}${number.slice(-1)} `);
+        if (Number.isNaN(Number(number.slice(-1)))) { // modified to check if the last character is a number
+          result = result.replace(number, `${mask}${ccNumber.substring(ccNumber.length - showLastDigits)}${number.slice(-1)}`);
         } else {
-          maskedtext = maskedtext.replace(number, `${mask}${ccNumber.substring(ccNumber.length - showLastDigits)} `);
+          result = result.replace(number, `${mask}${ccNumber.substring(ccNumber.length - showLastDigits)}`);
         }
       }
     }
   });
-  return maskedtext;
+  return result;
 };
+
 const maskCreditCard = (parsedMessage) => {
   let maskedtext = parsedMessage;
 
@@ -117,48 +100,48 @@ const maskCreditCard = (parsedMessage) => {
   const re14 = /\b(^[_])|(\d[ ]?){14}|(\d[_]?){14}|(\d[/]?){14}|(\d[.]?){14}|(\d[-]?){14}|(\d[*]?){14}|([_]+$|^[_]+?){2}\d\b/g;
   const re13 = /\b(^[_] )|(\d[ ]?){13}|(\d[_]?){13}|(\d[/]?){13}|(\d[.]?){13}|(\d[-]?){13}|(\d[*]?){13}|([_]+$|^[_]+?){2}\d\b/g;
 
-  const digit19Numbers = parsedMessage.replace(/[A-Za-z]/g, "^").match(re19);
+  const digit19Numbers = parsedMessage.replace(/[A-Za-z]/g, '^').match(re19);
   if (digit19Numbers !== null) {
     const NumberplusminusRegex = /(\d[ *\-./_]?){19}/g;
     maskedtext = maskNumbers(maskedtext, digit19Numbers, NumberplusminusRegex, 'XXXX-XXXX-XXXX-XXXX-', 3);
   }
 
-  const digit18Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re18);
+  const digit18Numbers = maskedtext.replace(/[A-Za-z]/g, '^').match(re18);
 
   if (digit18Numbers !== null) {
     const NumberplusminusRegex18 = /(\d[ *\-./_]?){18}/g;
     maskedtext = maskNumbers(maskedtext, digit18Numbers, NumberplusminusRegex18, 'XXXX-XXXX-XXXXX-', 5);
   }
 
-  const digit17Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re17);
+  const digit17Numbers = maskedtext.replace(/[A-Za-z]/g, '^').match(re17);
 
   if (digit17Numbers !== null) {
     const NumberplusminusRegex17 = /(\d[ *\-./_]?){17}/g;
     maskedtext = maskNumbers(maskedtext, digit17Numbers, NumberplusminusRegex17, 'XXXX-XXXX-XXXX-', 5);
   }
 
-  const digit16Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re16);
+  const digit16Numbers = maskedtext.replace(/[A-Za-z]/g, '^').match(re16);
 
   if (digit16Numbers !== null) {
     const NumberplusminusRegex16 = /(\d[ *\-./_]?){16}/g;
     maskedtext = maskNumbers(maskedtext, digit16Numbers, NumberplusminusRegex16, 'XXXX-XXXX-XXXX-', 4);
   }
 
-  const digit15Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re15);
+  const digit15Numbers = maskedtext.replace(/[A-Za-z]/g, '^').match(re15);
 
   if (digit15Numbers !== null) {
     const NumberplusminusRegex15 = /(\d[ *\-./_]?){15}/g;
     maskedtext = maskNumbers(maskedtext, digit15Numbers, NumberplusminusRegex15, 'XXXX-XXXX-XXXX-', 3);
   }
 
-  const digit14Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re14);
+  const digit14Numbers = maskedtext.replace(/[A-Za-z]/g, '^').match(re14);
 
   if (digit14Numbers !== null) {
     const NumberplusminusRegex14 = /(\d[ *\-./_]?){14}/g;
     maskedtext = maskNumbers(maskedtext, digit14Numbers, NumberplusminusRegex14, 'XXXX-XXXXXX-', 4);
   }
 
-  const digit13Numbers = maskedtext.replace(/[A-Za-z]/g, "^").match(re13);
+  const digit13Numbers = maskedtext.replace(/[A-Za-z]/g, '^').match(re13);
 
   if (digit13Numbers !== null) {
     const NumberplusminusRegex13 = /(\d[ *\-./_]?){13}/g;
