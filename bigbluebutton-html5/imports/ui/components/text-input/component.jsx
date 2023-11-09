@@ -3,7 +3,7 @@ import { defineMessages, injectIntl } from 'react-intl';
 import PropTypes from 'prop-types';
 import logger from '/imports/startup/client/logger';
 import Styled from './styles';
-import cnxAvalonUtils from '/cnx/cnxAvalonUtils';
+import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
 
 const propTypes = {
   placeholder: PropTypes.string,

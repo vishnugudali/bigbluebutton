@@ -4,8 +4,8 @@ import RedisPubSub from '/imports/startup/server/redis';
 import RegexWebUrl from '/imports/utils/regex-weburl';
 import { extractCredentials } from '/imports/api/common/server/helpers';
 import Logger from '/imports/startup/server/logger';
-import cnxAvalonUtils from '/cnx/cnxAvalonUtils';
-import cnxCCValidation from '/cnx/cnxCCValidation';
+import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
+import cnxCCValidation from '/imports/utils/cnxCCValidation';
 
 const HTML_SAFE_MAP = {
   '<': '&lt;',

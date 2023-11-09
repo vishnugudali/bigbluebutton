@@ -6,7 +6,7 @@ import { Meteor } from 'meteor/meteor';
 import Styled from './styles';
 import AudioService from '/imports/ui/components/audio/service';
 import Checkbox from '/imports/ui/components/common/checkbox/component';
-import cnxCCValidation from '/cnx/cnxCCValidation';
+import cnxCCValidation from '/imports/utils/cnxCCValidation';
 
 
 const MAX_INPUT_CHARS = Meteor.settings.public.poll.maxTypedAnswerLength;

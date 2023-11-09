@@ -7,7 +7,7 @@ import { makeCall } from '/imports/ui/services/api';
 import { Meteor } from 'meteor/meteor';
 import { Session } from 'meteor/session';
 import { isCaptionsEnabled } from '/imports/ui/services/features';
-import cnxAvalonUtils from '/cnx/cnxAvalonUtils';
+import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
 
 const CAPTIONS_CONFIG = Meteor.settings.public.captions;
 const ROLE_MODERATOR = Meteor.settings.public.user.role_moderator;

@@ -12,8 +12,8 @@ import { PANELS, ACTIONS } from '../layout/enums';
 import DragAndDrop from './dragAndDrop/component';
 import { addNewAlert } from '../screenreader-alert/service';
 import Header from '/imports/ui/components/common/control-header/component';
-import cnxAvalonUtils from '/cnx/cnxAvalonUtils';
-import cnxCCValidation from '/cnx/cnxCCValidation';
+import cnxAvalonUtils from '/imports/utils/cnxAvalonUtils';
+import cnxCCValidation from '/imports/utils/cnxCCValidation';
 
 const intlMessages = defineMessages({
   pollPaneTitle: {
