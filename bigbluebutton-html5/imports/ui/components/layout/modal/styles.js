@@ -5,15 +5,8 @@ import {
 } from '/imports/ui/stylesheets/styled-components/palette';
 import { smallOnly } from '/imports/ui/stylesheets/styled-components/breakpoints';
 import Button from '/imports/ui/components/common/button/component';
-import Modal from '/imports/ui/components/common/modal/simple/component';
+import ModalSimple from '/imports/ui/components/common/modal/simple/component';
 import ModalStyles from '/imports/ui/components/common/modal/simple/styles';
-
-const Header = styled.div`
-  margin: 0;
-  padding: 0;
-  border: none;
-  line-height: 2rem;
-`;
 
 const Content = styled.div`
   align-items: center;
@@ -21,16 +14,13 @@ const Content = styled.div`
   flex-direction: column;
   padding: .5rem 0 .5rem 0;
   overflow: hidden;
-  min-height: 30rem;
 `;
 
-const LayoutModal = styled(Modal)`
+const LayoutModal = styled(ModalSimple)`
   padding: 1rem;
-  min-height: 44rem;
 
   @media ${smallOnly} {
     height: unset;
-    min-height: 22.5rem;
   }
 
    ${({ isPhone }) => isPhone && `
@@ -71,7 +61,7 @@ const LayoutBtn = styled(Button)`
   align-items: center;
   flex-direction: column;
   padding: 0 !important;
-  margin: 0.5rem 1rem 1rem 1rem;
+  margin: 1rem 1rem 0.5rem 1rem;
   width: fit-content;
 
   @media ${smallOnly} {
@@ -79,6 +69,12 @@ const LayoutBtn = styled(Button)`
     border: ${colorWhite} solid 4px;
     border-radius: 10px;
     width: fit-content;
+  }
+
+  &:focus,
+  &:hover {
+    border: ${colorPrimary} solid 6px;
+    border-radius: 5px;
   }
   
   ${({ active }) => (active === 'true') && `
@@ -88,6 +84,41 @@ const LayoutBtn = styled(Button)`
     @media ${smallOnly} {
       border: ${colorPrimary} solid 4px;
       border-radius: 5px;
+    }
+
+    &:before {
+      font-family: 'bbb-icons';
+      color: ${colorWhite};
+      position: fixed;
+      content: "\\e946";
+      background-color: ${colorPrimary};
+      margin-left: 13.1rem;
+      padding: 0.3rem 0.2rem 0 0.6rem;
+      border-radius: 0 0 0 .3rem;
+
+      [dir="rtl"] & {
+        left: auto;
+        margin-right: 13.1rem;
+        margin-left: unset;
+        padding: 0.3rem 0.6rem 0 0.2rem;
+        border-radius: 0 0 .3rem 0;
+      }
+      width: 1.8rem;
+      height: 1.8rem;
+
+      @media ${smallOnly} {
+        width: 1rem;
+        height: 1rem;
+        font-size: 0.6rem;
+        margin-left: 4.5rem;
+        padding: 0.2rem 0.2rem 0 0.3rem;
+
+        [dir="rtl"] & {
+          margin-right: 4.5rem;
+          margin-left: unset;
+          padding: 0.2rem 0.3rem 0 0.2rem;
+        }
+      }
     }
   `};
 `;
@@ -143,16 +174,7 @@ const LabelPushLayout = styled.div`
   padding-right: 0.5rem;
 `;
 
-const Title = styled.h3`
-  text-align: center;
-  font-weight: 700;
-  font-size: 1.5rem;
-  white-space: normal;
-  color: ${colorPrimary};
-`;
-
 export default {
-  Header,
   Content,
   LayoutModal,
   BodyContainer,
@@ -165,5 +187,4 @@ export default {
   BottomButton,
   PushContainer,
   LabelPushLayout,
-  Title,
 };

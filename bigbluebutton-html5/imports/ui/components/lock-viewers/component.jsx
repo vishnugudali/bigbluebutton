@@ -2,9 +2,8 @@ import React, { Fragment, Component } from 'react';
 import { defineMessages, injectIntl } from 'react-intl';
 import PropTypes from 'prop-types';
 import Toggle from '/imports/ui/components/common/switch/component';
-import NotesService from '/imports/ui/components/notes/service';
 import Styled from './styles';
-import { isChatEnabled } from '/imports/ui/services/features';
+import { isChatEnabled, isSharedNotesEnabled } from '/imports/ui/services/features';
 
 const intlMessages = defineMessages({
   lockViewersTitle: {
@@ -78,6 +77,10 @@ const intlMessages = defineMessages({
   hideCursorsLabel: {
     id: "app.lock-viewers.hideViewersCursor",
     description: 'label for other viewers cursor',
+  },
+  hideAnnotationsLabel: {
+    id: "app.lock-viewers.hideAnnotationsLabel",
+    description: 'label for other viewers annotation',
   }
 });
 
@@ -96,11 +99,11 @@ class LockViewersComponent extends Component {
   constructor(props) {
     super(props);
 
-    const { meeting: { lockSettingsProps, usersProp } } = this.props;
+    const { meeting: { lockSettings, usersPolicies } } = this.props;
 
     this.state = {
-      lockSettingsProps,
-      usersProp,
+      lockSettingsProps: lockSettings,
+      usersProp: usersPolicies,
     };
   }
 
@@ -146,6 +149,9 @@ class LockViewersComponent extends Component {
       showToggleLabel,
       updateLockSettings,
       updateWebcamsOnlyForModerator,
+      isOpen,
+      onRequestClose,
+      priority,
     } = this.props;
 
     const { lockSettingsProps, usersProp } = this.state;
@@ -155,14 +161,15 @@ class LockViewersComponent extends Component {
     return (
       <Styled.LockViewersModal
         onRequestClose={closeModal}
-        hideBorder
-        shouldShowCloseButton={false}
         contentLabel={intl.formatMessage(intlMessages.ariaModalTitle)}
+        title={intl.formatMessage(intlMessages.lockViewersTitle)}
+        {...{
+          isOpen,
+          onRequestClose,
+          priority,
+        }}
       >
         <Styled.Container>
-          <Styled.Header>
-            <Styled.Title>{intl.formatMessage(intlMessages.lockViewersTitle)}</Styled.Title>
-          </Styled.Header>
           <Styled.Description>
             {`${intl.formatMessage(intlMessages.lockViewersDescription)}`}
           </Styled.Description>
@@ -172,7 +179,7 @@ class LockViewersComponent extends Component {
               <Styled.Bold>{intl.formatMessage(intlMessages.featuresLable)}</Styled.Bold>
               <Styled.Bold>{intl.formatMessage(intlMessages.lockStatusLabel)}</Styled.Bold>
             </Styled.SubHeader>
-            <Styled.Row>
+            <Styled.Row data-test="lockShareWebcamItem">
               <Styled.Col aria-hidden="true">
                 <Styled.FormElement>
                   <Styled.Label>
@@ -197,7 +204,7 @@ class LockViewersComponent extends Component {
                 </Styled.FormElementRight>
               </Styled.Col>
             </Styled.Row>
-            <Styled.Row>
+            <Styled.Row data-test="lockSeeOtherViewersWebcamItem">
               <Styled.Col aria-hidden="true">
                 <Styled.FormElement>
                   <Styled.Label>
@@ -222,7 +229,7 @@ class LockViewersComponent extends Component {
                 </Styled.FormElementRight>
               </Styled.Col>
             </Styled.Row>
-            <Styled.Row>
+            <Styled.Row data-test="lockShareMicrophoneItem">
               <Styled.Col aria-hidden="true">
                 <Styled.FormElement>
                   <Styled.Label>
@@ -250,7 +257,7 @@ class LockViewersComponent extends Component {
 
             {isChatEnabled() ? (
               <Fragment>
-                <Styled.Row>
+                <Styled.Row data-test="lockPublicChatItem">
                   <Styled.Col aria-hidden="true">
                     <Styled.FormElement>
                       <Styled.Label>
@@ -275,7 +282,7 @@ class LockViewersComponent extends Component {
                     </Styled.FormElementRight>
                   </Styled.Col>
                 </Styled.Row>
-                <Styled.Row>
+                <Styled.Row data-test="lockPrivateChatItem">
                   <Styled.Col aria-hidden="true">
                     <Styled.FormElement>
                       <Styled.Label>
@@ -303,9 +310,9 @@ class LockViewersComponent extends Component {
               </Fragment>
             ) : null
             }
-            {NotesService.isEnabled()
+            {isSharedNotesEnabled()
               ? (
-                <Styled.Row>
+                <Styled.Row data-test="lockEditSharedNotesItem">
                   <Styled.Col aria-hidden="true">
                     <Styled.FormElement>
                       <Styled.Label>
@@ -333,7 +340,7 @@ class LockViewersComponent extends Component {
               )
               : null
             }
-            <Styled.Row>
+            <Styled.Row data-test="lockUserListItem">
               <Styled.Col aria-hidden="true">
                 <Styled.FormElement>
                   <Styled.Label>
@@ -359,7 +366,7 @@ class LockViewersComponent extends Component {
               </Styled.Col>
             </Styled.Row>
 
-            <Styled.Row>
+            <Styled.Row data-test="hideViewersCursorItem">
               <Styled.Col aria-hidden="true">
                 <Styled.FormElement>
                   <Styled.Label>
@@ -384,6 +391,32 @@ class LockViewersComponent extends Component {
                 </Styled.FormElementRight>
               </Styled.Col>
             </Styled.Row>
+
+            <Styled.Row data-test="hideViewersAnnotation">
+              <Styled.Col aria-hidden="true">
+                <Styled.FormElement>
+                  <Styled.Label>
+                    {intl.formatMessage(intlMessages.hideAnnotationsLabel)}
+                  </Styled.Label>
+                </Styled.FormElement>
+              </Styled.Col>
+              <Styled.Col>
+                <Styled.FormElementRight>
+                  {this.displayLockStatus(lockSettingsProps.hideViewersAnnotation)}
+                  <Toggle
+                    icons={false}
+                    defaultChecked={lockSettingsProps.hideViewersAnnotation}
+                    onChange={() => {
+                      this.toggleLockSettings('hideViewersAnnotation');
+                    }}
+                    ariaLabel={intl.formatMessage(intlMessages.hideAnnotationsLabel)}
+                    showToggleLabel={showToggleLabel}
+                    invertColors={invertColors}
+                    data-test="hideViewersAnnotation"
+                  />
+                </Styled.FormElementRight>
+              </Styled.Col>
+            </Styled.Row>
           </Styled.Form>
         </Styled.Container>
         <Styled.Footer>
@@ -391,6 +424,7 @@ class LockViewersComponent extends Component {
             <Styled.ButtonCancel
               label={intl.formatMessage(intlMessages.buttonCancel)}
               onClick={closeModal}
+              color="secondary"
             />
             <Styled.ButtonApply
               color="primary"

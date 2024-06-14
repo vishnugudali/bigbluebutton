@@ -1,5 +1,6 @@
 package org.bigbluebutton.core.api
 
+import org.bigbluebutton.core.apps.users.UserEstablishedGraphqlConnectionInternalMsgHdlr
 import org.bigbluebutton.core.domain.{ BreakoutUser, BreakoutVoiceUser }
 import spray.json.JsObject
 case class InMessageHeader(name: String)
@@ -104,9 +105,29 @@ case class SendMessageToBreakoutRoomInternalMsg(parentId: String, breakoutId: St
  */
 case class EjectUserFromBreakoutInternalMsg(parentId: String, breakoutId: String, extUserId: String, ejectedBy: String, reason: String, reasonCode: String, ban: Boolean) extends InMessage
 
-// DeskShare
-case class DeskShareStartedRequest(conferenceName: String, callerId: String, callerIdName: String) extends InMessage
-case class DeskShareStoppedRequest(conferenceName: String, callerId: String, callerIdName: String) extends InMessage
-case class DeskShareRTMPBroadcastStartedRequest(conferenceName: String, streamname: String, videoWidth: Int, videoHeight: Int, timestamp: String) extends InMessage
-case class DeskShareRTMPBroadcastStoppedRequest(conferenceName: String, streamname: String, videoWidth: Int, videoHeight: Int, timestamp: String) extends InMessage
-case class DeskShareGetDeskShareInfoRequest(conferenceName: String, requesterID: String, replyTo: String) extends InMessage
+/**
+ * Sent by parent meeting to breakout room to import annotated slides.
+ * @param userId
+ * @param parentMeetingId
+ * @param filename
+ * @param allPages
+ */
+case class CapturePresentationReqInternalMsg(userId: String, parentMeetingId: String, filename: String, allPages: Boolean = true) extends InMessage
+
+/**
+ * Sent to the same meeting to force a new presenter to the Pod
+ * @param presenterId
+ */
+case class SetPresenterInDefaultPodInternalMsg(presenterId: String) extends InMessage
+
+/**
+ * Sent by GraphqlActionsActor to inform MeetingActor that user disconnected
+ * @param userId
+ */
+case class UserClosedAllGraphqlConnectionsInternalMsg(userId: String) extends InMessage
+
+/**
+ * Sent by GraphqlActionsActor to inform MeetingActor that user came back from disconnection
+ * @param userId
+ */
+case class UserEstablishedGraphqlConnectionInternalMsg(userId: String) extends InMessage

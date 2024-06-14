@@ -1,6 +1,7 @@
 package org.bigbluebutton.core.models
 
 import com.softwaremill.quicklens._
+import org.bigbluebutton.core.db.{ UserDAO, UserReactionDAO, UserStateDAO }
 import org.bigbluebutton.core.util.TimeUtil
 import org.bigbluebutton.core2.message.senders.MsgBuilder
 
@@ -21,10 +22,12 @@ object Users2x {
 
   def add(users: Users2x, user: UserState): Option[UserState] = {
     users.save(user)
+    UserStateDAO.update(user)
     Some(user)
   }
 
   def remove(users: Users2x, intId: String): Option[UserState] = {
+    //UserDAO.softDelete(intId)
     users.remove(intId)
   }
 
@@ -34,6 +37,7 @@ object Users2x {
     } yield {
       val newUser = u.copy(userLeftFlag = UserLeftFlag(true, System.currentTimeMillis()))
       users.save(newUser)
+      UserStateDAO.update(newUser)
       newUser
     }
   }
@@ -44,6 +48,8 @@ object Users2x {
     } yield {
       val newUser = u.copy(userLeftFlag = UserLeftFlag(false, 0))
       users.save(newUser)
+      UserStateDAO.update(newUser)
+      UserStateDAO.updateExpired(u.meetingId, u.intId, false)
       newUser
     }
   }
@@ -72,15 +78,6 @@ object Users2x {
     users.toVector.filter(u => !u.presenter)
   }
 
-  def getRandomlyPickableUsers(users: Users2x, reduceDup: Boolean): Vector[UserState] = {
-
-    if (reduceDup) {
-      users.toVector.filter(u => !u.presenter && u.role != Roles.MODERATOR_ROLE && !u.userLeftFlag.left && !u.pickExempted)
-    } else {
-      users.toVector.filter(u => !u.presenter && u.role != Roles.MODERATOR_ROLE && !u.userLeftFlag.left)
-    }
-  }
-
   def findViewers(users: Users2x): Vector[UserState] = {
     users.toVector.filter(u => u.role == Roles.VIEWER_ROLE)
   }
@@ -92,6 +89,19 @@ object Users2x {
   def updateLastUserActivity(users: Users2x, u: UserState): UserState = {
     val newUserState = modify(u)(_.lastActivityTime).setTo(System.currentTimeMillis())
     users.save(newUserState)
+
+    //Reset inactivity warning
+    if (u.lastInactivityInspect != 0) {
+      resetLastInactivityInspect(users, newUserState)
+    } else {
+      newUserState
+    }
+  }
+
+  def resetLastInactivityInspect(users: Users2x, u: UserState): UserState = {
+    val newUserState = modify(u)(_.lastInactivityInspect).setTo(0)
+    users.save(newUserState)
+    UserStateDAO.updateInactivityWarning(u.meetingId, u.intId, inactivityWarningDisplay = false, 0)
     newUserState
   }
 
@@ -107,11 +117,19 @@ object Users2x {
     newUserState
   }
 
+  def setMobile(users: Users2x, u: UserState): UserState = {
+    val newUserState = modify(u)(_.mobile).setTo(true)
+    users.save(newUserState)
+    UserStateDAO.update((newUserState))
+    newUserState
+  }
+
   def ejectFromMeeting(users: Users2x, intId: String): Option[UserState] = {
     for {
       _ <- users.remove(intId)
       ejectedUser <- users.removeFromCache(intId)
     } yield {
+      //      UserDAO.softDelete(intId)  --it will keep the user on Db
       ejectedUser
     }
   }
@@ -122,6 +140,7 @@ object Users2x {
     } yield {
       val newUser = u.modify(_.presenter).setTo(true)
       users.save(newUser)
+      UserStateDAO.update(newUser)
       newUser
     }
   }
@@ -132,6 +151,7 @@ object Users2x {
     } yield {
       val newUser = u.modify(_.presenter).setTo(false)
       users.save(newUser)
+      UserStateDAO.update(newUser)
       newUser
     }
   }
@@ -163,6 +183,7 @@ object Users2x {
     } yield {
       val newUser = u.modify(_.pin).setTo(pin)
       users.save(newUser)
+      UserStateDAO.update(newUser)
       newUser
     }
   }
@@ -172,8 +193,44 @@ object Users2x {
       u <- findWithIntId(users, intId)
     } yield {
       val newUser = u.modify(_.emoji).setTo(emoji)
+
       users.save(newUser)
+      UserStateDAO.update(newUser)
       newUser
+    }
+  }
+  def setReactionEmoji(users: Users2x, intId: String, reactionEmoji: String, durationInSeconds: Int): Option[UserState] = {
+    for {
+      u <- findWithIntId(users, intId)
+    } yield {
+      val newUser = u.modify(_.reactionEmoji).setTo(reactionEmoji)
+        .modify(_.reactionChangedOn).setTo(System.currentTimeMillis())
+
+      users.save(newUser)
+      UserReactionDAO.insert(u.meetingId, u.intId, reactionEmoji, durationInSeconds)
+      newUser
+    }
+  }
+
+  def setUserRaiseHand(users: Users2x, intId: String, raiseHand: Boolean): Option[UserState] = {
+    for {
+      u <- findWithIntId(users, intId)
+    } yield {
+      val newUserState = u.modify(_.raiseHand).setTo(raiseHand)
+      users.save(newUserState)
+      UserStateDAO.update(newUserState)
+      newUserState
+    }
+  }
+
+  def setUserAway(users: Users2x, intId: String, away: Boolean): Option[UserState] = {
+    for {
+      u <- findWithIntId(users, intId)
+    } yield {
+      val newUserState = u.modify(_.away).setTo(away)
+      users.save(newUserState)
+      UserStateDAO.update(newUserState)
+      newUserState
     }
   }
 
@@ -183,15 +240,17 @@ object Users2x {
     } yield {
       val newUser = u.modify(_.locked).setTo(locked)
       users.save(newUser)
+      UserStateDAO.update(newUser)
       newUser
     }
   }
 
-  def setUserExempted(users: Users2x, intId: String, exempted: Boolean): Option[UserState] = {
+  def setUserSpeechLocale(users: Users2x, intId: String, locale: String): Option[UserState] = {
     for {
       u <- findWithIntId(users, intId)
     } yield {
-      val newUser = u.modify(_.pickExempted).setTo(exempted)
+      val newUser = u.modify(_.speechLocale).setTo(locale)
+      UserStateDAO.update(newUser)
       users.save(newUser)
       newUser
     }
@@ -350,22 +409,29 @@ case class UserLeftFlag(left: Boolean, leftOn: Long)
 case class UserState(
     intId:                 String,
     extId:                 String,
+    meetingId:             String,
     name:                  String,
     role:                  String,
     guest:                 Boolean,
     pin:                   Boolean,
+    mobile:                Boolean,
     authed:                Boolean,
     guestStatus:           String,
     emoji:                 String,
+    reactionEmoji:         String,
+    reactionChangedOn:     Long         = 0,
+    raiseHand:             Boolean,
+    away:                  Boolean,
     locked:                Boolean,
     presenter:             Boolean,
     avatar:                String,
+    color:                 String,
     roleChangedOn:         Long         = System.currentTimeMillis(),
     lastActivityTime:      Long         = System.currentTimeMillis(),
     lastInactivityInspect: Long         = 0,
     clientType:            String,
-    pickExempted:          Boolean,
-    userLeftFlag:          UserLeftFlag
+    userLeftFlag:          UserLeftFlag,
+    speechLocale:          String       = ""
 )
 
 case class UserIdAndName(id: String, name: String)
@@ -407,4 +473,5 @@ object EjectReasonCode {
   val USER_INACTIVITY = "user_inactivity_eject_reason"
   val BANNED_USER_REJOINING = "banned_user_rejoining_reason"
   val USER_LOGGED_OUT = "user_logged_out_reason"
+  val MAX_PARTICIPANTS = "max_participants_reason"
 }

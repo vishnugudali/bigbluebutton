@@ -1,9 +1,10 @@
 package org.bigbluebutton.core.apps.breakout
 
 import org.bigbluebutton.common2.msgs._
-import org.bigbluebutton.core.api.{ UpdateBreakoutRoomTimeInternalMsg, SendTimeRemainingAuditInternalMsg }
+import org.bigbluebutton.core.api.{ SendTimeRemainingAuditInternalMsg, UpdateBreakoutRoomTimeInternalMsg }
 import org.bigbluebutton.core.apps.{ PermissionCheck, RightsManagementTrait }
 import org.bigbluebutton.core.bus.BigBlueButtonEvent
+import org.bigbluebutton.core.db.{ BreakoutRoomDAO, MeetingDAO, NotificationDAO }
 import org.bigbluebutton.core.domain.MeetingState2x
 import org.bigbluebutton.core.running.{ MeetingActor, OutMsgRouter }
 import org.bigbluebutton.core2.message.senders.{ MsgBuilder, Sender }
@@ -62,9 +63,10 @@ trait UpdateBreakoutRoomsTimeMsgHdlr extends RightsManagementTrait {
               Vector(s"${msg.body.timeInMinutes}")
             )
             outGW.send(notifyEvent)
+            NotificationDAO.insert(notifyEvent)
           }
 
-          val notifyModeratorEvent = MsgBuilder.buildNotifyUserInMeetingEvtMsg(
+          val notifyUserEvent = MsgBuilder.buildNotifyUserInMeetingEvtMsg(
             msg.header.userId,
             liveMeeting.props.meetingProp.intId,
             "info",
@@ -73,9 +75,12 @@ trait UpdateBreakoutRoomsTimeMsgHdlr extends RightsManagementTrait {
             "Sent to the moderator that requested breakout duration change",
             Vector(s"${msg.body.timeInMinutes}")
           )
-          outGW.send(notifyModeratorEvent)
+          outGW.send(notifyUserEvent)
+          NotificationDAO.insert(notifyUserEvent)
 
           log.debug("Updating {} minutes for breakout rooms time in meeting {}", msg.body.timeInMinutes, props.meetingProp.intId)
+          BreakoutRoomDAO.updateRoomsDuration(props.meetingProp.intId, newDurationInSeconds)
+          MeetingDAO.updateMeetingDurationByParentMeeting(props.meetingProp.intId, newDurationInSeconds)
           breakoutModel.setTime(newDurationInSeconds)
         }
       }
@@ -87,8 +92,10 @@ trait UpdateBreakoutRoomsTimeMsgHdlr extends RightsManagementTrait {
       eventBus.publish(BigBlueButtonEvent(props.meetingProp.intId, SendTimeRemainingAuditInternalMsg(props.meetingProp.intId, msg.body.timeInMinutes)))
 
       updatedModel match {
-        case Some(model) => state.update(Some(model))
-        case None        => state
+        case Some(model) => {
+          state.update(Some(model))
+        }
+        case None => state
       }
     }
   }

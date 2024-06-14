@@ -17,6 +17,7 @@ const colorTransparent = 'var(--color-transparent, #ff000000)';
 
 const colorPrimary = 'var(--color-primary, #0F70D7)';
 const colorDanger = 'var(--color-danger, #DF2721)';
+const colorDangerDark = 'var(--color-danger-dark, #AE1010)';
 const colorSuccess = 'var(--color-success, #008081)';
 const colorWarning = 'var(--color-warning, purple)';
 const colorOffline = `var(--color-offline, ${colorGrayLight})`;
@@ -63,6 +64,7 @@ const btnWarningBg = `var(--btn-warning-bg, ${colorWarning})`;
 const btnDangerBorder = `var(--btn-danger-border, ${colorDanger})`;
 const btnDangerColor = `var(--btn-danger-color, ${colorWhite})`;
 const btnDangerBg = `var(--btn-danger-bg, ${colorDanger})`;
+const btnDangerBgHover = 'var(--btn-danger-bg-hover, #C61C1C)';
 
 const btnDarkBorder = `var(--btn-dark-border, ${colorDanger})`;
 const btnDarkColor = `var(--btn-dark-color, ${colorWhite})`;
@@ -115,6 +117,7 @@ const toastErrorColor = `var(--toast-error-color, ${colorWhite})`;
 const toastErrorBg = `var(--toast-error-bg, ${colorDanger})`;
 
 const webcamBackgroundColor = 'var(--webcam-background-color, #001428FF)';
+const webcamPlaceholderBorder = 'var(--webcam-placeholder-border, rgba(255, 255, 255, 0.5))'; // colorWhite, 50%
 
 const toastWarningColor = `var(--toast-warning-color, ${colorWhite})`;
 const toastWarningBg = `var(--toast-warning-bg, ${colorWarning})`;
@@ -134,6 +137,7 @@ export {
   colorBlueLightest,
   colorPrimary,
   colorDanger,
+  colorDangerDark,
   colorSuccess,
   colorWarning,
   colorBackground,
@@ -181,6 +185,7 @@ export {
   userThumbnailBorder,
   loaderBg,
   loaderBullet,
+  btnDangerBgHover,
   systemMessageBackgroundColor,
   systemMessageBorderColor,
   systemMessageFontColor,
@@ -209,4 +214,5 @@ export {
   toastWarningColor,
   toastWarningBg,
   webcamBackgroundColor,
+  webcamPlaceholderBorder,
 };

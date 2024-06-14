@@ -17,7 +17,7 @@ case class ScreenshareRtmpBroadcastStartedVoiceConfEvtMsg(
   extends VoiceStandardMsg
 case class ScreenshareRtmpBroadcastStartedVoiceConfEvtMsgBody(voiceConf: String, screenshareConf: String,
                                                               stream: String, vidWidth: Int, vidHeight: Int,
-                                                              timestamp: String, hasAudio: Boolean)
+                                                              timestamp: String, hasAudio: Boolean, contentType: String)
 
 /**
  * Sent to clients to notify them of an RTMP stream starting.
@@ -30,7 +30,7 @@ case class ScreenshareRtmpBroadcastStartedEvtMsg(
   extends BbbCoreMsg
 case class ScreenshareRtmpBroadcastStartedEvtMsgBody(voiceConf: String, screenshareConf: String,
                                                      stream: String, vidWidth: Int, vidHeight: Int,
-                                                     timestamp: String, hasAudio: Boolean)
+                                                     timestamp: String, hasAudio: Boolean, contentType: String)
 
 /**
  * Sync screenshare state with bbb-html5
@@ -48,7 +48,8 @@ case class SyncGetScreenshareInfoRespMsgBody(
     vidWidth:        Int,
     vidHeight:       Int,
     timestamp:       String,
-    hasAudio:        Boolean
+    hasAudio:        Boolean,
+    contentType:     String
 )
 
 /**
@@ -259,6 +260,46 @@ case class MeetingMutedEvtMsg(
 case class MeetingMutedEvtMsgBody(muted: Boolean, mutedBy: String)
 
 /**
+ * Send to FS to deaf user in the voice conference.
+ */
+object DeafUserInVoiceConfSysMsg { val NAME = "DeafUserInVoiceConfSysMsg" }
+case class DeafUserInVoiceConfSysMsg(
+    header: BbbCoreHeaderWithMeetingId,
+    body:   DeafUserInVoiceConfSysMsgBody
+) extends BbbCoreMsg
+case class DeafUserInVoiceConfSysMsgBody(voiceConf: String, voiceUserId: String, deaf: Boolean)
+
+/**
+ * Send to FS to hold user in the voice conference.
+ */
+object HoldUserInVoiceConfSysMsg { val NAME = "HoldUserInVoiceConfSysMsg" }
+case class HoldUserInVoiceConfSysMsg(
+    header: BbbCoreHeaderWithMeetingId,
+    body:   HoldUserInVoiceConfSysMsgBody
+) extends BbbCoreMsg
+case class HoldUserInVoiceConfSysMsgBody(voiceConf: String, voiceUserId: String, hold: Boolean)
+
+/**
+ * Send to FS to play sound in the voice conference, or specific user
+ */
+object PlaySoundInVoiceConfSysMsg { val NAME = "PlaySoundInVoiceConfSysMsg" }
+case class PlaySoundInVoiceConfSysMsg(
+    header: BbbCoreHeaderWithMeetingId,
+    body:   PlaySoundInVoiceConfSysMsgBody
+) extends BbbCoreMsg
+case class PlaySoundInVoiceConfSysMsgBody(voiceConf: String, voiceUserId: String, soundPath: String)
+
+/**
+ * Send to FS to stop current sound in the voice conference, or specific user
+ */
+object StopSoundInVoiceConfSysMsg { val NAME = "StopSoundInVoiceConfSysMsg" }
+case class StopSoundInVoiceConfSysMsg(
+    header: BbbCoreHeaderWithMeetingId,
+    body:   StopSoundInVoiceConfSysMsgBody
+) extends BbbCoreMsg
+case class StopSoundInVoiceConfSysMsgBody(voiceConf: String, voiceUserId: String)
+
+/**
  * Received from FS that voice is being recorded.
  */
 object RecordingStartedVoiceConfEvtMsg { val NAME = "RecordingStartedVoiceConfEvtMsg" }
@@ -346,8 +387,9 @@ case class UserStatusVoiceConfEvtMsgBody(voiceConf: String, confUsers: Vector[Co
 case class ConfVoiceUser(voiceUserId: String, intId: String,
                          callerIdName: String, callerIdNum: String, muted: Boolean,
                          talking: Boolean, callingWith: String,
-                         calledInto: String // freeswitch, kms
-                         )
+                         calledInto: String, // freeswitch, kms
+                         hold:       Boolean,
+                         uuid:       String)
 case class ConfVoiceRecording(recordPath: String, recordStartTime: Long)
 
 /**
@@ -360,7 +402,9 @@ case class UserJoinedVoiceConfEvtMsg(
 ) extends VoiceStandardMsg
 case class UserJoinedVoiceConfEvtMsgBody(voiceConf: String, voiceUserId: String, intId: String,
                                          callerIdName: String, callerIdNum: String, muted: Boolean,
-                                         talking: Boolean, callingWith: String)
+                                         talking: Boolean, callingWith: String,
+                                         hold: Boolean,
+                                         uuid: String)
 
 /**
  * Sent to client that a user has joined the voice conference.
@@ -368,7 +412,7 @@ case class UserJoinedVoiceConfEvtMsgBody(voiceConf: String, voiceUserId: String,
 object UserJoinedVoiceConfToClientEvtMsg { val NAME = "UserJoinedVoiceConfToClientEvtMsg" }
 case class UserJoinedVoiceConfToClientEvtMsg(header: BbbClientMsgHeader, body: UserJoinedVoiceConfToClientEvtMsgBody) extends BbbCoreMsg
 case class UserJoinedVoiceConfToClientEvtMsgBody(voiceConf: String, intId: String, voiceUserId: String, callerName: String,
-                                                 callerNum: String, muted: Boolean,
+                                                 callerNum: String, color: String, muted: Boolean,
                                                  talking: Boolean, callingWith: String, listenOnly: Boolean)
 
 /**
@@ -597,4 +641,65 @@ case class GetMicrophonePermissionRespMsgBody(
     userId:       String,
     sfuSessionId: String,
     allowed:      Boolean
+)
+
+/**
+ * Sent to FS to hold an audio channel
+ */
+object HoldChannelInVoiceConfSysMsg { val NAME = "HoldChannelInVoiceConfSysMsg" }
+case class HoldChannelInVoiceConfSysMsg(
+    header: BbbCoreHeaderWithMeetingId,
+    body:   HoldChannelInVoiceConfSysMsgBody
+) extends BbbCoreMsg
+case class HoldChannelInVoiceConfSysMsgBody(
+    voiceConf: String,
+    uuid:      String,
+    hold:      Boolean
+)
+
+/**
+ * Received from FS that the user channel hold state has changed
+ */
+object ChannelHoldChangedVoiceConfEvtMsg { val NAME = "ChannelHoldChangedVoiceConfEvtMsg" }
+case class ChannelHoldChangedVoiceConfEvtMsg(
+    header: BbbCoreVoiceConfHeader,
+    body:   ChannelHoldChangedVoiceConfEvtMsgBody
+) extends VoiceStandardMsg
+case class ChannelHoldChangedVoiceConfEvtMsgBody(
+    voiceConf: String,
+    intId:     String,
+    uuid:      String,
+    hold:      Boolean
+)
+
+/**
+ * Sent to bbb-webrtc-sfu to request for userId's microphone connection
+ * to be toggled between bidirectional and unidirectional (listen only) modes
+ * (enabled = unidirectional, listen only, !enabled = bidirectional);
+ */
+object ToggleListenOnlyModeSysMsg { val NAME = "ToggleListenOnlyModeSysMsg" }
+case class ToggleListenOnlyModeSysMsg(
+    header: BbbCoreHeaderWithMeetingId,
+    body:   ToggleListenOnlyModeSysMsgBody
+) extends BbbCoreMsg
+case class ToggleListenOnlyModeSysMsgBody(
+    voiceConf: String,
+    userId:    String,
+    enabled:   Boolean
+)
+
+/**
+ * Sent from bbb-webrtc-sfu to indicate that userId's microphone channel switched
+ * modes (enabled = unidirectional, listen only, !enabled = bidirectional);
+ */
+object ListenOnlyModeToggledInSfuEvtMsg { val NAME = "ListenOnlyModeToggledInSfuEvtMsg" }
+case class ListenOnlyModeToggledInSfuEvtMsg(
+    header: BbbCoreVoiceConfHeader,
+    body:   ListenOnlyModeToggledInSfuEvtMsgBody
+) extends VoiceStandardMsg
+case class ListenOnlyModeToggledInSfuEvtMsgBody(
+    meetingId: String,
+    voiceConf: String,
+    userId:    String,
+    enabled:   Boolean
 )

@@ -1,5 +1,6 @@
 import Settings from '/imports/ui/services/settings';
 import logger from '/imports/startup/client/logger';
+import BBBStorage from '/imports/ui/services/storage';
 
 const AUDIO_SESSION_NUM_KEY = 'AudioSessionNumber';
 const DEFAULT_INPUT_DEVICE_ID = '';
@@ -8,6 +9,11 @@ const INPUT_DEVICE_ID_KEY = 'audioInputDeviceId';
 const OUTPUT_DEVICE_ID_KEY = 'audioOutputDeviceId';
 const AUDIO_MICROPHONE_CONSTRAINTS = Meteor.settings.public.app.defaultSettings
   .application.microphoneConstraints;
+const MEDIA_TAG = Meteor.settings.public.media.mediaTag;
+
+const CONFIG = window.meetingClientSettings.public.app.audioCaptions;
+const PROVIDER = CONFIG.provider;
+const audioCaptionsEnabled = window.meetingClientSettings.public.app.audioCaptions.enabled;
 
 const getAudioSessionNumber = () => {
   let currItem = parseInt(sessionStorage.getItem(AUDIO_SESSION_NUM_KEY), 10);
@@ -30,6 +36,16 @@ const reloadAudioElement = (audioElement) => {
 
   return false;
 };
+
+const getCurrentAudioSinkId = () => {
+  const audioElement = document.querySelector(MEDIA_TAG);
+  return audioElement?.sinkId || DEFAULT_OUTPUT_DEVICE_ID;
+};
+
+const getStoredAudioInputDeviceId = () => BBBStorage.getItem(INPUT_DEVICE_ID_KEY);
+const getStoredAudioOutputDeviceId = () => BBBStorage.getItem(OUTPUT_DEVICE_ID_KEY);
+const storeAudioInputDeviceId = (deviceId) => BBBStorage.setItem(INPUT_DEVICE_ID_KEY, deviceId);
+const storeAudioOutputDeviceId = (deviceId) => BBBStorage.setItem(OUTPUT_DEVICE_ID_KEY, deviceId);
 
 /**
  * Filter constraints set in audioDeviceConstraints, based on
@@ -63,7 +79,8 @@ const filterSupportedConstraints = (audioDeviceConstraints) => {
   }
 };
 
-const getAudioConstraints = ({ deviceId = '' }) => {
+const getAudioConstraints = (constraintFields = {}) => {
+  const { deviceId = '' } = constraintFields;
   const userSettingsConstraints = Settings.application.microphoneConstraints;
   const audioDeviceConstraints = userSettingsConstraints
     || AUDIO_MICROPHONE_CONSTRAINTS || {};
@@ -79,6 +96,44 @@ const getAudioConstraints = ({ deviceId = '' }) => {
   return matchConstraints;
 };
 
+const doGUM = async (constraints, retryOnFailure = false) => {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia(constraints);
+    return stream;
+  } catch (error) {
+    // This is probably a deviceId mismatch. Retry with base constraints
+    // without an exact deviceId.
+    if (error.name === 'OverconstrainedError' && retryOnFailure) {
+      logger.warn({
+        logCode: 'audio_overconstrainederror_rollback',
+        extraInfo: {
+          constraints,
+        },
+      }, 'Audio getUserMedia returned OverconstrainedError, rollback');
+
+      return navigator.mediaDevices.getUserMedia({ audio: getAudioConstraints() });
+    }
+
+    // Not OverconstrainedError - bubble up the error.
+    throw error;
+  }
+};
+
+const isEnabled = () => audioCaptionsEnabled;
+
+const isWebSpeechApi = () => PROVIDER === 'webspeech';
+
+const isVosk = () => PROVIDER === 'vosk';
+
+const isWhispering = () => PROVIDER === 'whisper';
+
+const isDeepSpeech = () => PROVIDER === 'deepSpeech';
+
+const isActive = () => isEnabled()
+  && ((isWebSpeechApi()) || isVosk() || isWhispering() || isDeepSpeech());
+
+const stereoUnsupported = () => isActive() && isVosk();
+
 export {
   DEFAULT_INPUT_DEVICE_ID,
   DEFAULT_OUTPUT_DEVICE_ID,
@@ -89,4 +144,11 @@ export {
   reloadAudioElement,
   filterSupportedConstraints,
   getAudioConstraints,
+  getCurrentAudioSinkId,
+  getStoredAudioInputDeviceId,
+  storeAudioInputDeviceId,
+  getStoredAudioOutputDeviceId,
+  storeAudioOutputDeviceId,
+  doGUM,
+  stereoUnsupported,
 };

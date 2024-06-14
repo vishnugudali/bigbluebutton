@@ -20,9 +20,13 @@ const intlMessages = defineMessages({
     id: 'app.endMeeting.contentWarning',
     description: 'end meeting content warning',
   },
+  confirmButtonLabel: {
+    id: 'app.endMeeting.yesLabel',
+    description: 'end meeting confirm button label',
+  },
 });
 
-const { warnAboutUnsavedContentOnMeetingEnd } = Meteor.settings.public.app;
+const { warnAboutUnsavedContentOnMeetingEnd } = window.meetingClientSettings.public.app;
 
 const propTypes = {
   intl: PropTypes.shape({
@@ -37,12 +41,13 @@ class EndMeetingComponent extends PureComponent {
   render() {
     const {
       users, intl, endMeeting, meetingTitle,
+      isOpen, onRequestClose, priority, setIsOpen,
     } = this.props;
 
     const title = intl.formatMessage(intlMessages.endMeetingTitle, { 0: meetingTitle });
 
-    let description = users > 0
-      ? intl.formatMessage(intlMessages.endMeetingDescription, { 0: users })
+    let description = users > 1
+      ? intl.formatMessage(intlMessages.endMeetingDescription, { 0: users - 1 })
       : intl.formatMessage(intlMessages.endMeetingNoUserDescription);
 
     if (warnAboutUnsavedContentOnMeetingEnd) {
@@ -58,6 +63,13 @@ class EndMeetingComponent extends PureComponent {
         description={description}
         confirmButtonColor="danger"
         confirmButtonDataTest="confirmEndMeeting"
+        confirmButtonLabel={intl.formatMessage(intlMessages.confirmButtonLabel)}
+        {...{
+          isOpen,
+          onRequestClose,
+          priority,
+          setIsOpen,
+        }}
       />
     );
   }

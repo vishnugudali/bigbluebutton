@@ -2,7 +2,6 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { defineMessages, injectIntl } from 'react-intl';
 import Button from '/imports/ui/components/common/button/component';
-import { withModalMounter } from '/imports/ui/components/common/modal/service';
 import AudioTestContainer from '/imports/ui/components/audio/audio-test/container';
 import Styled from './styles';
 import logger from '/imports/startup/client/logger';
@@ -11,8 +10,10 @@ import LocalEchoContainer from '/imports/ui/components/audio/local-echo/containe
 import DeviceSelector from '/imports/ui/components/audio/device-selector/component';
 import {
   getAudioConstraints,
+  doGUM,
 } from '/imports/api/audio/client/bridge/service';
 import MediaStreamUtils from '/imports/utils/media-stream-utils';
+import audioManager from '/imports/ui/services/audio-manager';
 
 const propTypes = {
   intl: PropTypes.shape({
@@ -29,6 +30,7 @@ const propTypes = {
   produceStreams: PropTypes.bool,
   withEcho: PropTypes.bool,
   withVolumeMeter: PropTypes.bool,
+  notify: PropTypes.func.isRequired,
 };
 
 const defaultProps = {
@@ -62,16 +64,17 @@ const intlMessages = defineMessages({
     id: 'app.audio.joinAudio',
     description: 'Confirmation button label',
   },
+  deviceChangeFailed: {
+    id: 'app.audioNotification.deviceChangeFailed',
+    description: 'Device change failed',
+  },
 });
 
 class AudioSettings extends React.Component {
   constructor(props) {
     super(props);
 
-    const {
-      inputDeviceId,
-      outputDeviceId,
-    } = props;
+    const { inputDeviceId, outputDeviceId } = props;
 
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleOutputChange = this.handleOutputChange.bind(this);
@@ -80,9 +83,9 @@ class AudioSettings extends React.Component {
     this.state = {
       inputDeviceId,
       outputDeviceId,
-      // If streams need to be produced, device selectors are blocked until
-      // at least one stream is generated
-      deviceSelectorsBlocked: props.produceStreams,
+      // If streams need to be produced, device selectors and audio join are
+      // blocked until at least one stream is generated
+      producingStreams: props.produceStreams,
       stream: null,
     };
 
@@ -92,20 +95,24 @@ class AudioSettings extends React.Component {
   componentDidMount() {
     const { inputDeviceId, outputDeviceId } = this.state;
 
+    Session.set('inEchoTest', true);
     this._isMounted = true;
     // Guarantee initial in/out devices are initialized on all ends
     this.setInputDevice(inputDeviceId);
     this.setOutputDevice(outputDeviceId);
+    audioManager.isEchoTest = true;
   }
 
   componentWillUnmount() {
     const { stream } = this.state;
 
+    Session.set('inEchoTest', false);
     this._mounted = false;
 
     if (stream) {
       MediaStreamUtils.stopMediaStreamTracks(stream);
     }
+    audioManager.isEchoTest = false;
   }
 
   handleInputChange(deviceId) {
@@ -118,10 +125,7 @@ class AudioSettings extends React.Component {
 
   handleConfirmationClick() {
     const { stream } = this.state;
-    const {
-      produceStreams,
-      handleConfirmation,
-    } = this.props;
+    const { produceStreams, handleConfirmation } = this.props;
 
     // Stream generation disabled or there isn't any stream: just run the provided callback
     if (!produceStreams || !stream) return handleConfirmation();
@@ -135,58 +139,97 @@ class AudioSettings extends React.Component {
   }
 
   setInputDevice(deviceId) {
-    const {
-      handleGUMFailure,
-      changeInputDevice,
-      produceStreams,
-    } = this.props;
+    const { handleGUMFailure, changeInputDevice, produceStreams, intl, notify } = this.props;
+    const { inputDeviceId: currentInputDeviceId } = this.state;
 
-    changeInputDevice(deviceId);
+    try {
+      changeInputDevice(deviceId);
+      // Only generate input streams if they're going to be used with something
+      // In this case, the volume meter or local echo test.
+      if (produceStreams) {
+        this.generateInputStream(deviceId)
+          .then((stream) => {
+            // Extract the deviceId again from the stream to guarantee consistency
+            // between stream DID vs chosen DID. That's necessary in scenarios where,
+            // eg, there's no default/pre-set deviceId ('') and the browser's
+            // default device has been altered by the user (browser default != system's
+            // default).
+            const extractedDeviceId = MediaStreamUtils.extractDeviceIdFromStream(stream, 'audio');
+            if (extractedDeviceId && extractedDeviceId !== deviceId)
+              changeInputDevice(extractedDeviceId);
 
-    // Only generate input streams if they're going to be used with something
-    // In this case, the volume meter or local echo test.
-    if (produceStreams) {
-      this.generateInputStream(deviceId).then((stream) => {
-        if (!this._isMounted) return;
+            // Component unmounted after gUM resolution -> skip echo rendering
+            if (!this._isMounted) return;
 
+            this.setState({
+              inputDeviceId: extractedDeviceId,
+              stream,
+              producingStreams: false,
+            });
+          })
+          .catch((error) => {
+            logger.warn(
+              {
+                logCode: 'audiosettings_gum_failed',
+                extraInfo: {
+                  deviceId,
+                  errorMessage: error.message,
+                  errorName: error.name,
+                },
+              },
+              `Audio settings gUM failed: ${error.name}`
+            );
+            handleGUMFailure(error);
+          });
+      } else {
         this.setState({
-          // We extract the deviceId again from the stream to guarantee consistency
-          // between stream vs chosen device
-          inputDeviceId: MediaStreamUtils.extractDeviceIdFromStream(stream, 'audio'),
-          stream,
-          deviceSelectorsBlocked: false,
+          inputDeviceId: deviceId,
         });
-      }).catch((error) => {
-        logger.warn({
-          logCode: 'audiosettings_gum_failed',
+      }
+    } catch (error) {
+      logger.debug(
+        {
+          logCode: 'audiosettings_input_device_change_failure',
           extraInfo: {
-            deviceId,
-            errorMessage: error.message,
             errorName: error.name,
+            errorMessage: error.message,
+            deviceId: currentInputDeviceId,
+            newDeviceId: deviceId,
           },
-        }, `Audio settings gUM failed: ${error.name}`);
-        handleGUMFailure(error);
-      });
-    } else {
-      this.setState({
-        inputDeviceId: deviceId,
-      });
+        },
+        `Audio settings: error changing input device - {${error.name}: ${error.message}}`
+      );
+      notify(intl.formatMessage(intlMessages.deviceChangeFailed), true);
     }
   }
 
   setOutputDevice(deviceId) {
-    const {
-      changeOutputDevice,
-      withEcho,
-    } = this.props;
+    const { changeOutputDevice, withEcho, intl, notify } = this.props;
+    const { outputDeviceId: currentOutputDeviceId } = this.state;
 
     // withEcho usage (isLive arg): if local echo is enabled we need the device
-    // change to be performed seamlessly (which is what the isLive parameter guarantes)
-    changeOutputDevice(deviceId, withEcho);
-
-    this.setState({
-      outputDeviceId: deviceId,
-    });
+    // change to be performed seamlessly (which is what the isLive parameter guarantees)
+    changeOutputDevice(deviceId, withEcho)
+      .then(() => {
+        this.setState({
+          outputDeviceId: deviceId,
+        });
+      })
+      .catch((error) => {
+        logger.debug(
+          {
+            logCode: 'audiosettings_output_device_change_failure',
+            extraInfo: {
+              errorName: error.name,
+              errorMessage: error.message,
+              deviceId: currentOutputDeviceId,
+              newDeviceId: deviceId,
+            },
+          },
+          `Audio settings: error changing output device - {${error.name}: ${error.message}}`
+        );
+        notify(intl.formatMessage(intlMessages.deviceChangeFailed), true);
+      });
   }
 
   generateInputStream(inputDeviceId) {
@@ -204,7 +247,7 @@ class AudioSettings extends React.Component {
       audio: getAudioConstraints({ deviceId: inputDeviceId }),
     };
 
-    return navigator.mediaDevices.getUserMedia(constraints);
+    return doGUM(constraints, true);
   }
 
   renderOutputTest() {
@@ -215,14 +258,11 @@ class AudioSettings extends React.Component {
       <Styled.Row>
         <Styled.SpacedLeftCol>
           <Styled.LabelSmall htmlFor="audioTest">
-            {!withEcho
-              ? <AudioTestContainer id="audioTest" />
-              : (
-                <LocalEchoContainer
-                  intl={intl}
-                  stream={stream}
-                />
-              )}
+            {!withEcho ? (
+              <AudioTestContainer id="audioTest" />
+            ) : (
+              <LocalEchoContainer intl={intl} stream={stream} />
+            )}
           </Styled.LabelSmall>
         </Styled.SpacedLeftCol>
       </Styled.Row>
@@ -237,17 +277,16 @@ class AudioSettings extends React.Component {
       <Styled.Row>
         <Styled.LabelSmallFullWidth htmlFor="audioStreamVolume">
           {intl.formatMessage(intlMessages.streamVolumeLabel)}
-          <AudioStreamVolume
-            stream={stream}
-          />
+          <AudioStreamVolume stream={stream} />
         </Styled.LabelSmallFullWidth>
       </Styled.Row>
     ) : null;
   }
 
   renderDeviceSelectors() {
-    const { inputDeviceId, outputDeviceId, deviceSelectorsBlocked } = this.state;
-    const { intl } = this.props;
+    const { inputDeviceId, outputDeviceId, producingStreams } = this.state;
+    const { intl, isConnecting } = this.props;
+    const blocked = producingStreams || isConnecting;
 
     return (
       <Styled.Row>
@@ -259,7 +298,7 @@ class AudioSettings extends React.Component {
                 id="inputDeviceSelector"
                 deviceId={inputDeviceId}
                 kind="audioinput"
-                blocked={deviceSelectorsBlocked}
+                blocked={blocked}
                 onChange={this.handleInputChange}
                 intl={intl}
               />
@@ -274,7 +313,7 @@ class AudioSettings extends React.Component {
                 id="outputDeviceSelector"
                 deviceId={outputDeviceId}
                 kind="audiooutput"
-                blocked={deviceSelectorsBlocked}
+                blocked={blocked}
                 onChange={this.handleOutputChange}
                 intl={intl}
               />
@@ -286,19 +325,14 @@ class AudioSettings extends React.Component {
   }
 
   render() {
-    const {
-      isConnecting,
-      intl,
-      handleBack,
-    } = this.props;
+    const { isConnecting, intl, handleBack } = this.props;
+    const { producingStreams } = this.state;
 
     return (
-      <Styled.FormWrapper>
+      <Styled.FormWrapper data-test="audioSettingsModal">
         <Styled.Form>
           <Styled.Row>
-            <Styled.AudioNote>
-              {intl.formatMessage(intlMessages.descriptionLabel)}
-            </Styled.AudioNote>
+            <Styled.AudioNote>{intl.formatMessage(intlMessages.descriptionLabel)}</Styled.AudioNote>
           </Styled.Row>
           {this.renderDeviceSelectors()}
           {this.renderOutputTest()}
@@ -308,15 +342,17 @@ class AudioSettings extends React.Component {
         <Styled.EnterAudio>
           <Styled.BackButton
             label={intl.formatMessage(intlMessages.backLabel)}
-            size="md"
+            color="secondary"
             onClick={handleBack}
             disabled={isConnecting}
           />
           <Button
+            data-test="joinEchoTestButton"
             size="md"
             color="primary"
             label={intl.formatMessage(intlMessages.retryLabel)}
             onClick={this.handleConfirmationClick}
+            disabled={isConnecting || producingStreams}
           />
         </Styled.EnterAudio>
       </Styled.FormWrapper>
@@ -327,4 +363,4 @@ class AudioSettings extends React.Component {
 AudioSettings.propTypes = propTypes;
 AudioSettings.defaultProps = defaultProps;
 
-export default withModalMounter(injectIntl(AudioSettings));
+export default injectIntl(AudioSettings);

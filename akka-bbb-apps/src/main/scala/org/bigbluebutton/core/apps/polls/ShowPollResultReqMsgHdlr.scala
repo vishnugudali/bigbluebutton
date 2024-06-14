@@ -2,12 +2,15 @@ package org.bigbluebutton.core.apps.polls
 
 import org.bigbluebutton.common2.domain.SimplePollResultOutVO
 import org.bigbluebutton.common2.msgs._
+import org.bigbluebutton.core.apps.groupchats.GroupChatApp
 import org.bigbluebutton.core.bus.MessageBus
 import org.bigbluebutton.core.domain.MeetingState2x
 import org.bigbluebutton.core.models.Polls
 import org.bigbluebutton.core.running.LiveMeeting
-import org.bigbluebutton.core.apps.{ PermissionCheck, RightsManagementTrait }
-import org.bigbluebutton.core2.message.senders.{ MsgBuilder }
+import org.bigbluebutton.core.apps.{PermissionCheck, RightsManagementTrait}
+import org.bigbluebutton.core.db.{ChatMessageDAO, JsonUtils, NotificationDAO}
+import org.bigbluebutton.core2.message.senders.MsgBuilder
+import spray.json.DefaultJsonProtocol.jsonFormat2
 
 trait ShowPollResultReqMsgHdlr extends RightsManagementTrait {
   this: PollApp2x =>
@@ -34,6 +37,7 @@ trait ShowPollResultReqMsgHdlr extends RightsManagementTrait {
         Vector()
       )
       bus.outGW.send(notifyEvent)
+      NotificationDAO.insert(notifyEvent)
 
       // SendWhiteboardAnnotationPubMsg
       val annotationRouting = Routing.addMsgToClientRouting(MessageTypes.BROADCAST_TO_MEETING, liveMeeting.props.meetingProp.intId, msg.header.userId)
@@ -54,6 +58,27 @@ trait ShowPollResultReqMsgHdlr extends RightsManagementTrait {
       for {
         (result, annotationProp) <- Polls.handleShowPollResultReqMsg(state, msg.header.userId, msg.body.pollId, liveMeeting)
       } yield {
+        //it will be used to render the chat message (will be stored as json in chat-msg metadata)
+        val resultAsSimpleMap = Map(
+          "id" -> result.id,
+          "questionType" -> result.questionType,
+          "questionText" -> result.questionText.getOrElse(""),
+          "answers" -> {
+            for {
+              answer <- result.answers
+            } yield {
+              Map(
+                "id" -> answer.id,
+                "key" -> answer.key,
+                "numVotes" -> answer.numVotes
+              )
+            }
+          },
+          "numRespondents" -> result.numRespondents,
+          "numResponders" -> result.numResponders,
+        )
+
+        ChatMessageDAO.insertSystemMsg(liveMeeting.props.meetingProp.intId, GroupChatApp.MAIN_PUBLIC_CHAT, "", GroupChatMessageType.POLL, resultAsSimpleMap, "")
         broadcastEvent(msg, result, annotationProp)
       }
     }

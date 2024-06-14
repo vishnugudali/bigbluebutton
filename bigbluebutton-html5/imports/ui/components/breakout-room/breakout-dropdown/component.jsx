@@ -1,9 +1,8 @@
 import React, { PureComponent } from 'react';
 import { defineMessages, injectIntl } from 'react-intl';
-import { withModalMounter } from '/imports/ui/components/common/modal/service';
-import BBBMenu from "/imports/ui/components/common/menu/component";
-import CreateBreakoutRoomModal from '/imports/ui/components/actions-bar/create-breakout-room/container';
-import Trigger from "/imports/ui/components/common/control-header/right/component";
+import BBBMenu from '/imports/ui/components/common/menu/component';
+import CreateBreakoutRoomContainerGraphql from '../create-breakout-room/component';
+import Trigger from '/imports/ui/components/common/control-header/right/component';
 
 const intlMessages = defineMessages({
   options: {
@@ -17,7 +16,6 @@ const intlMessages = defineMessages({
   manageUsers: {
     id: 'app.breakout.dropdown.manageUsers',
     description: 'Manage users label',
-    defaultMessage: 'Manage Users',
   },
   destroy: {
     id: 'app.breakout.dropdown.destroyAll',
@@ -28,6 +26,11 @@ const intlMessages = defineMessages({
 class BreakoutDropdown extends PureComponent {
   constructor(props) {
     super(props);
+
+    this.state = {
+      isCreateBreakoutRoomModalOpen: false,
+    };
+    this.setCreateBreakoutRoomModalIsOpen = this.setCreateBreakoutRoomModalIsOpen.bind(this);
   }
 
   getAvailableActions() {
@@ -37,7 +40,6 @@ class BreakoutDropdown extends PureComponent {
       endAllBreakouts,
       isMeteorConnected,
       amIModerator,
-      mountModal,
     } = this.props;
 
     this.menuItems = [];
@@ -49,8 +51,8 @@ class BreakoutDropdown extends PureComponent {
         label: intl.formatMessage(intlMessages.manageDuration),
         onClick: () => {
           openBreakoutTimeManager();
-        }
-      }
+        },
+      },
     );
 
     this.menuItems.push(
@@ -59,11 +61,9 @@ class BreakoutDropdown extends PureComponent {
         dataTest: 'openUpdateBreakoutUsersModal',
         label: intl.formatMessage(intlMessages.manageUsers),
         onClick: () => {
-          mountModal(
-            <CreateBreakoutRoomModal isUpdate />
-          );
-        }
-      }
+          this.setCreateBreakoutRoomModalIsOpen(true);
+        },
+      },
     );
 
     if (amIModerator) {
@@ -75,12 +75,18 @@ class BreakoutDropdown extends PureComponent {
           disabled: !isMeteorConnected,
           onClick: () => {
             endAllBreakouts();
-          }
-        }
+          },
+        },
       );
     }
 
     return this.menuItems;
+  }
+
+  setCreateBreakoutRoomModalIsOpen(value) {
+    this.setState({
+      isCreateBreakoutRoomModalOpen: value,
+    });
   }
 
   render() {
@@ -89,33 +95,47 @@ class BreakoutDropdown extends PureComponent {
       isRTL,
     } = this.props;
 
+    const { isCreateBreakoutRoomModalOpen } = this.state;
     return (
       <>
         <BBBMenu
           trigger={
-            <Trigger
-              data-test="breakoutOptionsMenu"
-              icon="more"
-              label={intl.formatMessage(intlMessages.options)}
-              aria-label={intl.formatMessage(intlMessages.options)}
-              onClick={() => null}
-            />
+            (
+              <Trigger
+                data-test="breakoutOptionsMenu"
+                icon="more"
+                label={intl.formatMessage(intlMessages.options)}
+                aria-label={intl.formatMessage(intlMessages.options)}
+                onClick={() => null}
+              />
+            )
           }
           opts={{
-            id: "default-dropdown-menu",
+            id: 'breakoutroom-dropdown-menu',
             keepMounted: true,
             transitionDuration: 0,
             elevation: 3,
-            getContentAnchorEl: null,
-            fullwidth: "true",
+            getcontentanchorel: null,
+            fullwidth: 'true',
             anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
             transformOrigin: { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
           }}
           actions={this.getAvailableActions()}
         />
+        {isCreateBreakoutRoomModalOpen ? (
+          <CreateBreakoutRoomContainerGraphql
+            {...{
+              isUpdate: true,
+              onRequestClose: () => this.setCreateBreakoutRoomModalIsOpen(false),
+              priority: 'low',
+              setIsOpen: this.setCreateBreakoutRoomModalIsOpen,
+              isOpen: isCreateBreakoutRoomModalOpen,
+            }}
+          />
+        ) : null}
       </>
     );
   }
 }
 
-export default withModalMounter(injectIntl(BreakoutDropdown));
+export default injectIntl(BreakoutDropdown);

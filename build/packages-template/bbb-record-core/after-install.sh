@@ -21,7 +21,7 @@ case "$1" in
       HOST=$IP
     fi
 
-    yq w -i $TARGET playback_host "$HOST"
+    yq e -i ".playback_host = \"$HOST\"" $TARGET
 
     chmod +r $TARGET
 
@@ -83,6 +83,10 @@ case "$1" in
     else
       echo "Error: FreeSWITCH not installed"
     fi
+
+    systemctl enable bbb-rap-resque-worker.service
+    systemctl enable bbb-rap-starter.service
+    systemctl enable bbb-rap-caption-inbox.service
   ;;
   
   *)

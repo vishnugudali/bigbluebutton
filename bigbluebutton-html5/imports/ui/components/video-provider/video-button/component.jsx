@@ -1,16 +1,20 @@
-import React, { memo } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import ButtonEmoji from '/imports/ui/components/common/button/button-emoji/ButtonEmoji';
 import VideoService from '../service';
 import { defineMessages, injectIntl } from 'react-intl';
 import Styled from './styles';
-import { validIOSVersion } from '/imports/ui/components/app/service';
 import deviceInfo from '/imports/utils/deviceInfo';
-import { debounce } from 'lodash';
+import { debounce } from '/imports/utils/debounce';
 import BBBMenu from '/imports/ui/components/common/menu/component';
+import { isVirtualBackgroundsEnabled } from '/imports/ui/services/features';
+import Button from '/imports/ui/components/common/button/component';
+import VideoPreviewContainer from '/imports/ui/components/video-preview/container';
+import { CameraSettingsDropdownItemType } from 'bigbluebutton-html-plugin-sdk/dist/cjs/extensible-areas/camera-settings-dropdown-item/enums';
+import Settings from '/imports/ui/services/settings';
 
-const ENABLE_WEBCAM_SELECTOR_BUTTON = Meteor.settings.public.app.enableWebcamSelectorButton;
-const ENABLE_WEBCAM_BACKGROUND_UPLOAD = Meteor.settings.public.virtualBackgrounds.enableVirtualBackgroundUpload;
+const ENABLE_WEBCAM_SELECTOR_BUTTON = window.meetingClientSettings.public.app.enableWebcamSelectorButton;
+const ENABLE_CAMERA_BRIGHTNESS = window.meetingClientSettings.public.app.enableCameraBrightness;
 
 const intlMessages = defineMessages({
   videoSettings: {
@@ -49,10 +53,6 @@ const intlMessages = defineMessages({
     id: 'app.video.clientDisconnected',
     description: 'Meteor disconnected label',
   },
-  iOSWarning: {
-    id: 'app.iOSWarning.label',
-    description: 'message indicating to upgrade ios version',
-  },
 });
 
 const JOIN_VIDEO_DELAY_MILLISECONDS = 500;
@@ -61,7 +61,12 @@ const propTypes = {
   intl: PropTypes.object.isRequired,
   hasVideoStream: PropTypes.bool.isRequired,
   status: PropTypes.string.isRequired,
-  mountVideoPreview: PropTypes.func.isRequired,
+  cameraSettingsDropdownItems: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.string,
+    type: PropTypes.string,
+  })).isRequired,
+  sendUserUnshareWebcam: PropTypes.func.isRequired,
+  setLocalSettings: PropTypes.func.isRequired,
 };
 
 const JoinVideoButton = ({
@@ -69,40 +74,62 @@ const JoinVideoButton = ({
   hasVideoStream,
   status,
   disableReason,
-  mountVideoPreview,
+  updateSettings,
+  cameraSettingsDropdownItems,
+  sendUserUnshareWebcam,
+  setLocalSettings,
+  away,
 }) => {
   const { isMobile } = deviceInfo;
   const isMobileSharingCamera = hasVideoStream && isMobile;
   const isDesktopSharingCamera = hasVideoStream && !isMobile;
   const shouldEnableWebcamSelectorButton = ENABLE_WEBCAM_SELECTOR_BUTTON
     && isDesktopSharingCamera;
-  const shouldEnableWebcamBackgroundUploadButton = ENABLE_WEBCAM_BACKGROUND_UPLOAD
+  const shouldEnableWebcamVisualEffectsButton = (isVirtualBackgroundsEnabled()
+    || ENABLE_CAMERA_BRIGHTNESS)
     && hasVideoStream
     && !isMobile;
   const exitVideo = () => isDesktopSharingCamera && (!VideoService.isMultipleCamerasEnabled()
     || shouldEnableWebcamSelectorButton);
 
-  const handleOnClick = debounce(() => {
-    if (!validIOSVersion()) {
-      return VideoService.notify(intl.formatMessage(intlMessages.iOSWarning));
-    }
+  const [propsToPassModal, setPropsToPassModal] = useState({});
+  const [forceOpen, setForceOpen] = useState(false);
+  const [isVideoPreviewModalOpen, setVideoPreviewModalIsOpen] = useState(false);
+  const [wasSelfViewDisabled, setWasSelfViewDisabled] = useState(false);
 
+  useEffect(() => {
+    const isSelfViewDisabled = Settings.application.selfViewDisable;
+
+    if (isVideoPreviewModalOpen && isSelfViewDisabled) {
+      setWasSelfViewDisabled(true);
+      const obj = {
+        application:
+          { ...Settings.application, selfViewDisable: false },
+      };
+      updateSettings(obj, null, setLocalSettings);
+    }
+  }, [isVideoPreviewModalOpen]);
+
+  const handleOnClick = debounce(() => {
     switch (status) {
       case 'videoConnecting':
-        VideoService.stopVideo();
+        VideoService.stopVideo(undefined, sendUserUnshareWebcam);
         break;
       case 'connected':
       default:
         if (exitVideo()) {
-          VideoService.exitVideo();
+          VideoService.exitVideo(sendUserUnshareWebcam);
         } else {
-          mountVideoPreview(isMobileSharingCamera);
+          setForceOpen(isMobileSharingCamera);
+          setVideoPreviewModalIsOpen(true);
         }
     }
   }, JOIN_VIDEO_DELAY_MILLISECONDS);
 
-  const handleOpenAdvancedOptions = (props) => {
-    mountVideoPreview(isMobileSharingCamera, props);
+  const handleOpenAdvancedOptions = (callback) => {
+    if (callback) callback();
+    setForceOpen(isDesktopSharingCamera);
+    setVideoPreviewModalIsOpen(true);
   };
 
   const getMessageFromStatus = () => {
@@ -128,53 +155,116 @@ const JoinVideoButton = ({
           key: 'advancedVideo',
           label: intl.formatMessage(intlMessages.advancedVideo),
           onClick: () => handleOpenAdvancedOptions(),
+          dataTest: 'advancedVideoSettingsButton',
         },
       );
     }
 
-    if (shouldEnableWebcamBackgroundUploadButton) {
+    if (shouldEnableWebcamVisualEffectsButton) {
       actions.push(
         {
           key: 'virtualBgSelection',
           label: intl.formatMessage(intlMessages.visualEffects),
-          onClick: () => handleOpenAdvancedOptions({ isVisualEffects: true }),
+          onClick: () => handleOpenAdvancedOptions((
+          ) => setPropsToPassModal({ isVisualEffects: true })),
         },
       );
     }
 
-    if (actions.length === 0) return null;
+    if (actions.length === 0 || away) return null;
+    const customStyles = { top: '-3.6rem' };
 
+    cameraSettingsDropdownItems.forEach((plugin) => {
+      switch (plugin.type) {
+        case CameraSettingsDropdownItemType.OPTION:
+          actions.push({
+            key: plugin.id,
+            label: plugin.label,
+            onClick: plugin.onClick,
+            icon: plugin.icon,
+          });
+          break;
+        case CameraSettingsDropdownItemType.SEPARATOR:
+          actions.push({
+            key: plugin.id,
+            isSeparator: true,
+          });
+          break;
+        default:
+          break;
+      }
+    });
     return (
       <BBBMenu
+        customStyles={!isMobile ? customStyles : null}
         trigger={(
           <ButtonEmoji
             emoji="device_list_selector"
+            data-test="videoDropdownMenu"
             hideLabel
             label={intl.formatMessage(intlMessages.videoSettings)}
             rotate
+            tabIndex={0}
           />
         )}
         actions={actions}
+        opts={{
+          id: 'video-dropdown-menu',
+          keepMounted: true,
+          transitionDuration: 0,
+          elevation: 3,
+          getcontentanchorel: null,
+          fullwidth: 'true',
+          anchorOrigin: { vertical: 'top', horizontal: 'center' },
+          transformOrigin: { vertical: 'top', horizontal: 'center' },
+        }}
       />
     );
-  }
+  };
 
   return (
-    <Styled.OffsetBottom>
-      <Styled.VideoButton
-        label={label}
-        data-test={hasVideoStream ? 'leaveVideo' : 'joinVideo'}
-        onClick={handleOnClick}
-        hideLabel
-        color={isSharing ? 'primary' : 'default'}
-        icon={isSharing ? 'video' : 'video_off'}
-        ghost={!isSharing}
-        size="lg"
-        circle
-        disabled={!!disableReason}
-      />
-      {renderUserActions()}
-    </Styled.OffsetBottom>
+    <>
+      <Styled.OffsetBottom>
+        <Button
+          label={label}
+          data-test={hasVideoStream ? 'leaveVideo' : 'joinVideo'}
+          onClick={handleOnClick}
+          hideLabel
+          color={isSharing ? 'primary' : 'default'}
+          icon={isSharing ? 'video' : 'video_off'}
+          ghost={!isSharing}
+          size="lg"
+          circle
+          disabled={!!disableReason}
+        />
+        {renderUserActions()}
+      </Styled.OffsetBottom>
+      {isVideoPreviewModalOpen ? (
+        <VideoPreviewContainer
+          {...{
+            callbackToClose: () => {
+              if (wasSelfViewDisabled) {
+                setTimeout(() => {
+                  const obj = {
+                    application:
+                      { ...Settings.application, selfViewDisable: true },
+                  };
+                  updateSettings(obj, null, setLocalSettings);
+                  setWasSelfViewDisabled(false);
+                }, 100);
+              }
+              setPropsToPassModal({});
+              setForceOpen(false);
+            },
+            forceOpen,
+            priority: 'low',
+            setIsOpen: setVideoPreviewModalIsOpen,
+            isOpen: isVideoPreviewModalOpen,
+          }}
+          {...propsToPassModal}
+        />
+      ) : null}
+    </>
   );
 };
 

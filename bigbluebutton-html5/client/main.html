@@ -17,7 +17,7 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 -->
 
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <style>
     html {
       box-sizing: border-box;
@@ -94,34 +94,27 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
       color: var(--palette-placeholder-text);
       opacity: 1;
     }
-    
-    #TD-PrimaryTools {
-      flex-direction: column;
+
+    main {
+      display: initial;
     }
 
-    #TD-Tools {
-        position: absolute;
-        right: 1rem;
-        bottom: 5rem;
+    .overrideSelect {
+      background-color: #FFF !important;
+      color: #000 !important;
     }
 
-    [dir="rtl"] #TD-Tools {
-        left: 1rem;
-        right: auto;
+    .select {
+      background-color: rgba(66, 133, 244, 1) !important;
+      color: #FFF !important;
     }
 
-    #TD-Tools > div {
-      flex-direction: column;
+    .fade-in {
+      opacity: 1 !important;
     }
 
-    #TD-Styles + div {
-      display: flex;
-      padding-right: 2.5rem;
-    }
-
-    [dir="rtl"] #TD-Styles + div  {
-      padding-left: 2.5rem;
-      padding-right: 0px;
+    .fade-out {
+      opacity: 0 !important;
     }
   </style>
   <script>
@@ -130,7 +123,6 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
     });
   </script>
   <script src="compatibility/sip.js?v=VERSION" language="javascript"></script>
-  <script src="compatibility/kurento-utils.js?v=VERSION" language="javascript"></script>
   <script src="compatibility/tflite-simd.js?v=VERSION" language="javascript"></script>
   <script src="compatibility/tflite.js?v=VERSION" language="javascript"></script>
   <!-- fonts -->
@@ -157,9 +149,19 @@ with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 </head>
 <body style="background-color: #06172A">
   <div id="aria-polite-alert" aria-live="polite" aria-atomic="false" class="sr-only"></div>
-  <div id="app" role="document">
+  <svg style="display: none; width: 1px; height: 1px;">
+    <defs>
+      <symbol id="redPointer" viewBox="0 0 10 10">
+        <circle cx="5" cy="5" r="4" fill="red" />
+      </symbol>
+    </defs>
+  </svg>
+  <main>
+    <div id="app" role="document">
+  </main>
   </div>
   <span id="destination"></span>
   <audio id="remote-media" autoplay>
   </audio>
+  <div id="modals-container"></div>
 </body>

@@ -50,12 +50,16 @@ class RecordingComponent extends PureComponent {
       amIModerator,
       toggleRecording,
       isMeteorConnected,
+      isOpen,
+      onRequestClose,
+      priority,
+      setIsOpen,
     } = this.props;
 
     let title;
 
     if (!recordingStatus) {
-      title = recordingTime >= 0 ? intl.formatMessage(intlMessages.resumeTitle)
+      title = recordingTime > 0 ? intl.formatMessage(intlMessages.resumeTitle)
         : intl.formatMessage(intlMessages.startTitle);
     } else {
       title = intl.formatMessage(intlMessages.stopTitle);
@@ -74,6 +78,12 @@ class RecordingComponent extends PureComponent {
         title={title}
         description={description}
         disableConfirmButton={!isMeteorConnected}
+        {...{
+          isOpen,
+          onRequestClose,
+          priority,
+          setIsOpen,
+        }}
       />
     );
   }

@@ -42,6 +42,7 @@ import {
   btnDangerBorder,
   btnDangerColor,
   btnDangerBg,
+  btnDangerBgHover,
   btnDarkBorder,
   btnDarkColor,
   btnDarkBg,
@@ -51,6 +52,8 @@ import {
   btnMutedBorder,
   btnMutedColor,
   btnMutedBg,
+  colorWhite,
+  colorGray,
 } from '/imports/ui/stylesheets/styled-components/palette';
 import BaseButton from './base/component';
 
@@ -239,6 +242,12 @@ const ButtonWrapper = styled(BaseButton)`
   ${({
     size, circle, ghost, color,
   }) => size === 'lg' && circle && ghost && color === 'default' && `
+    span {
+      box-shadow: 0 0 1px 0px ${btnDefaultGhostColor} inset, 0 0 1px 0px ${btnDefaultGhostColor};
+      background-color: transparent !important;
+      border-color: ${btnDefaultGhostColor} !important;
+    }
+
     & > span{
       color: ${btnDefaultGhostColor};
     }
@@ -356,6 +365,73 @@ const ButtonSpan = styled.span`
     padding: ${jumboPaddingY} ${jumboPaddingX};
   `}
 
+  ${({ size, color }) => size === 'md' && color === 'light' && `
+    color: ${colorGray};
+    
+    &:focus,
+    .buttonWrapper:focus:not([aria-disabled="true"]) & {
+      color: ${colorGray};
+      box-shadow: 0 0 0 1px #CDD6E0 !important;
+      background-color: #DCE4EC !important;
+    }
+    
+    &:hover {
+      color: hsl(210, 13%, 20%) !important;
+      background-color: #DCE4EC !important;
+    }
+
+    &:active {
+      color: hsl(210, 13%, 20%) !important;
+      background-color: hsl(210, 30%, 80%) !important;
+    }
+
+    &:focus:hover {
+      color: hsl(210, 13%, 20%) !important;
+      box-shadow: 0 0 0 1px #CDD6E0 !important;
+      background-color: #DCE4EC !important;
+    }
+
+    &:focus:active {
+      color: hsl(210, 13%, 20%) !important;
+      box-shadow: 0 0 0 1px #CDD6E0 !important;
+      background-color: hsl(210, 30%, 80%) !important;
+    }
+  `}
+
+  ${({ size, color }) => size === 'md' && color === 'dark' && `
+    color: ${colorWhite};
+    background: none !important;
+    
+    &:focus,
+    .buttonWrapper:focus:not([aria-disabled="true"]) & {
+      color: ${colorWhite};
+      box-shadow: 0 0 0 1px ${btnDefaultGhostBorder} !important;
+      background-color: ${btnDefaultGhostBg} !important;
+    }
+    
+    &:hover {
+      color: hsl(0, 0%, 85%) !important;
+      background-color: ${btnDefaultGhostBg} !important;
+    }
+
+    &:active {
+      color: hsl(0, 0%, 85%) !important;
+      background-color: ${btnDefaultGhostActiveBg} !important;
+    }
+
+    &:focus:hover {
+      color: hsl(0, 0%, 85%) !important;
+      box-shadow: 0 0 0 1px ${btnDefaultGhostBorder} !important;
+      background-color: ${btnDefaultGhostBg} !important;
+    }
+
+    &:focus:active {
+      color: hsl(0, 0%, 85%) !important;
+      box-shadow: 0 0 0 1px ${btnDefaultGhostBorder} !important;
+      background-color: ${btnDefaultGhostActiveBg} !important;
+    }
+  `}
+
   ${({ color, ghost }) => color === 'default' && !ghost && `
     color: ${btnDefaultColor};
     background-color: ${btnDefaultBg};
@@ -447,6 +523,7 @@ const ButtonSpan = styled.span`
     &:hover,
     .buttonWrapper:hover & {
       color: ${btnDangerColor};
+      background-color: ${btnDangerBgHover};
     }
   `}
 
@@ -903,6 +980,45 @@ const Button = styled(BaseButton)`
     &:hover,
     .buttonWrapper:hover & {
       color: ${btnMutedColor};
+    }
+  `}
+
+  ${({ color }) => color === 'secondary' && `
+    background: transparent;
+    color: ${colorGray};
+    border: 3px solid transparent;
+    border-radius: 4px;
+  
+
+    &:focus {
+      background: hsl(210, 30%, 95%);
+      box-shadow: 0 0 0 ${borderSize} hsl(211, 87%, 80%);
+    }
+
+    &:hover {
+      background: hsl(210, 30%, 95%);
+      color: hsl(210, 13%, 35%);
+    }
+
+    &:active {
+      background: hsl(210, 30%, 89%);
+      color: hsl(210, 13%, 30%);
+    }
+
+    &:hover {
+      &:focus {
+        background: hsl(210, 30%, 95%);
+        color: hsl(210, 13%, 30%);
+        box-shadow: 0 0 0 ${borderSize} hsl(211, 87%, 80%);
+      }
+    }
+
+    &:focus {
+      &:active {
+        background: hsl(210, 30%, 89%);
+        color: hsl(210, 13%, 30%);
+        box-shadow: 0 0 0 ${borderSize} hsl(211, 87%, 80%);
+      }
     }
   `}
 

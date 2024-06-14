@@ -12,20 +12,15 @@ import {
   filterValidIceCandidates,
   analyzeSdp,
   logSelectedCandidate,
+  forceDisableStereo,
 } from '/imports/utils/sdpUtils';
-import { Tracker } from 'meteor/tracker';
-import VoiceCallStates from '/imports/api/voice-call-states';
-import CallStateOptions from '/imports/api/voice-call-states/utils/callStates';
-import Auth from '/imports/ui/services/auth';
-import Storage from '/imports/ui/services/storage/session';
 import browserInfo from '/imports/utils/browserInfo';
 import {
-  getCurrentAudioSessionNumber,
   getAudioSessionNumber,
   getAudioConstraints,
   filterSupportedConstraints,
-  DEFAULT_INPUT_DEVICE_ID,
-  DEFAULT_OUTPUT_DEVICE_ID,
+  doGUM,
+  stereoUnsupported,
 } from '/imports/api/audio/client/bridge/service';
 
 const MEDIA = Meteor.settings.public.media;
@@ -48,8 +43,6 @@ const TRACE_SIP = MEDIA.traceSip || false;
 const SDP_SEMANTICS = MEDIA.sdpSemantics;
 const FORCE_RELAY = MEDIA.forceRelay;
 
-const INPUT_DEVICE_ID_KEY = 'audioInputDeviceId';
-const OUTPUT_DEVICE_ID_KEY = 'audioOutputDeviceId';
 const UA_SERVER_VERSION = Meteor.settings.public.app.bbbServerVersion;
 const UA_CLIENT_VERSION = Meteor.settings.public.app.html5ClientBuild;
 
@@ -108,61 +101,10 @@ class SIPSession {
    * @return {Promise}            A Promise that is resolved with the
    *                              MediaStream object that was set.
    */
-  async setInputStream(stream) {
-    try {
-      if (!this.currentSession
-        || !this.currentSession.sessionDescriptionHandler
-      ) return null;
+  setInputStream(stream) {
+    if (!this.currentSession?.sessionDescriptionHandler) return null;
 
-      await this.currentSession.sessionDescriptionHandler
-        .setLocalMediaStream(stream);
-
-      return stream;
-    } catch (error) {
-      logger.warn({
-        logCode: 'sip_js_setinputstream_error',
-        extraInfo: {
-          errorCode: error.code,
-          errorMessage: error.message,
-          callerIdName: this.user.callerIdName,
-        },
-      }, 'Failed to set input stream (mic)');
-      return null;
-    }
-  }
-
-  /**
-   * Change the input device with the given deviceId, without renegotiating
-   * peer.
-   * A new MediaStream object is created for the given deviceId. This object
-   * is returned by the resolved promise.
-   * @param  {String}  deviceId The id of the device to be set as input
-   * @return {Promise}          A promise that is resolved with the MediaStream
-   *                            object after changing the input device.
-   */
-  async liveChangeInputDevice(deviceId) {
-    try {
-      this.inputDeviceId = deviceId;
-
-      const constraints = {
-        audio: getAudioConstraints({ deviceId: this.inputDeviceId }),
-      };
-
-      this.inputStream.getAudioTracks().forEach((t) => t.stop());
-
-      return await navigator.mediaDevices.getUserMedia(constraints)
-        .then(this.setInputStream.bind(this));
-    } catch (error) {
-      logger.warn({
-        logCode: 'sip_js_livechangeinputdevice_error',
-        extraInfo: {
-          errorCode: error.code,
-          errorMessage: error.message,
-          callerIdName: this.user.callerIdName,
-        },
-      }, 'Failed to change input device (mic)');
-      return null;
-    }
+    return this.currentSession.sessionDescriptionHandler.setLocalMediaStream(stream);
   }
 
   get inputDeviceId() {
@@ -325,7 +267,7 @@ class SIPSession {
     *
     * sessionSupportRTPPayloadDtmf
     * tells if browser support RFC4733 DTMF.
-    * Safari 13 doens't support it yet
+    * Safari 13 doesn't support it yet
     */
   sessionSupportRTPPayloadDtmf(session) {
     try {
@@ -436,11 +378,12 @@ class SIPSession {
     if (this.preloadedInputStream && this.preloadedInputStream.active) {
       return Promise.resolve(this.preloadedInputStream);
     }
-    // The rest of this mimicks the default factory behavior.
+    // The rest of this mimics the default factory behavior.
     if (!constraints.audio && !constraints.video) {
       return Promise.resolve(new MediaStream());
     }
-    return navigator.mediaDevices.getUserMedia(constraints);
+
+    return doGUM(constraints, true);
   }
 
   createUserAgent(iceServers) {
@@ -550,7 +493,7 @@ class SIPSession {
                 extraInfo: {
                   callerIdName: this.user.callerIdName,
                 },
-              }, 'User agent succesfully reconnected');
+              }, 'User agent successfully reconnected');
             }).catch(() => {
               if (userAgentConnected) {
                 error = 1001;
@@ -583,7 +526,7 @@ class SIPSession {
           extraInfo: {
             callerIdName: this.user.callerIdName,
           },
-        }, 'User agent succesfully connected');
+        }, 'User agent successfully connected');
 
         window.addEventListener('beforeunload', this.onBeforeUnload.bind(this));
 
@@ -619,7 +562,7 @@ class SIPSession {
             extraInfo: {
               callerIdName: this.user.callerIdName,
             },
-          }, 'User agent succesfully reconnected');
+          }, 'User agent successfully reconnected');
 
           resolve();
         }).catch(() => {
@@ -631,7 +574,7 @@ class SIPSession {
               callerIdName: this.user.callerIdName,
             },
           }, 'User agent failed to reconnect after'
-          + ` ${USER_AGENT_RECONNECTION_ATTEMPTS} attemps`);
+          + ` ${USER_AGENT_RECONNECTION_ATTEMPTS} attempts`);
 
           this.callback({
             status: this.baseCallStates.failed,
@@ -762,11 +705,24 @@ class SIPSession {
       const target = SIP.UserAgent.makeURI(`sip:${callExtension}@${hostname}`);
 
       const matchConstraints = getAudioConstraints({ deviceId: this.inputDeviceId });
+      const sessionDescriptionHandlerModifiers = [];
       const iceModifiers = [
         filterValidIceCandidates.bind(this, this.validIceCandidates),
       ];
 
       if (!SIPJS_ALLOW_MDNS) iceModifiers.push(stripMDnsCandidates);
+
+      // The current Vosk provider does not support stereo when transcribing
+      // microphone streams, so we need to make sure it is forcefully disabled
+      // via SDP munging. Having it disabled on server side FS _does not suffice_
+      // because the stereo parameter is client-mandated (ie replicated in the
+      // answer)
+      if (stereoUnsupported()) {
+        logger.debug({
+          logCode: 'sipjs_transcription_disable_stereo',
+        }, 'Transcription provider does not support stereo, forcing stereo=0');
+        sessionDescriptionHandlerModifiers.push(forceDisableStereo);
+      }
 
       const inviterOptions = {
         sessionDescriptionHandlerOptions: {
@@ -778,6 +734,7 @@ class SIPSession {
           },
           iceGatheringTimeout: ICE_GATHERING_TIMEOUT,
         },
+        sessionDescriptionHandlerModifiers,
         sessionDescriptionHandlerModifiersPostICEGathering: iceModifiers,
         delegate: {
           onSessionDescriptionHandler:
@@ -812,9 +769,18 @@ class SIPSession {
 
       const setupRemoteMedia = () => {
         const mediaElement = document.querySelector(MEDIA_TAG);
+        const { sdp } = this.currentSession.sessionDescriptionHandler
+          .peerConnection.remoteDescription;
+
+        logger.info({
+          logCode: 'sip_js_session_setup_remote_media',
+          extraInfo: {
+            callerIdName: this.user.callerIdName,
+            sdp,
+          },
+        }, 'Audio call - setup remote media');
 
         this.remoteStream = new MediaStream();
-
         this.currentSession.sessionDescriptionHandler
           .peerConnection.getReceivers().forEach((receiver) => {
             if (receiver.track) {
@@ -846,22 +812,15 @@ class SIPSession {
             fsReady,
           },
         }, 'Audio call - check if ICE is finished and FreeSWITCH is ready');
-        if (iceCompleted && fsReady) {
+
+        if (iceCompleted) {
           this.webrtcConnected = true;
           setupRemoteMedia();
+        }
 
-          const { sdp } = this.currentSession.sessionDescriptionHandler
-            .peerConnection.remoteDescription;
-
-          logger.info({
-            logCode: 'sip_js_session_setup_remote_media',
-            extraInfo: {
-              callerIdName: this.user.callerIdName,
-              sdp,
-            },
-          }, 'Audio call - setup remote media');
-
+        if (fsReady) {
           this.callback({ status: this.baseCallStates.started, bridge: this.bridgeName });
+
           resolve();
         }
       };
@@ -1049,7 +1008,7 @@ class SIPSession {
         }
 
         // if session hasn't even started, we let audio-modal to handle
-        // any possile errors
+        // any possible errors
         if (!this._currentSessionState) return false;
 
 
@@ -1116,32 +1075,6 @@ class SIPSession {
         this._currentSessionState = state;
       });
 
-      Tracker.autorun((c) => {
-        const selector = {
-          meetingId: Auth.meetingID,
-          userId: Auth.userID,
-          clientSession: getCurrentAudioSessionNumber(),
-        };
-
-        const query = VoiceCallStates.find(selector);
-
-        query.observeChanges({
-          changed: (id, fields) => {
-            if (!fsReady && ((this.inEchoTest && fields.callState === CallStateOptions.IN_ECHO_TEST)
-              || (!this.inEchoTest && fields.callState === CallStateOptions.IN_CONFERENCE))) {
-              fsReady = true;
-              checkIfCallReady();
-            }
-
-            if (fields.callState === CallStateOptions.CALL_ENDED) {
-              fsReady = false;
-              c.stop();
-              checkIfCallStopped();
-            }
-          },
-        });
-      });
-
       resolve();
     });
   }
@@ -1171,9 +1104,7 @@ class SIPSession {
       if (isChrome) {
         matchConstraints.deviceId = this.inputDeviceId;
 
-        const stream = await navigator.mediaDevices.getUserMedia(
-          { audio: matchConstraints },
-        );
+        const stream = await doGUM({ audio: matchConstraints });
 
         this.currentSession.sessionDescriptionHandler
           .setLocalMediaStream(stream);
@@ -1212,10 +1143,6 @@ export default class SIPBridge extends BaseAudioBridge {
       name: username,
     };
 
-    this.media = {
-      inputDevice: {},
-    };
-
     this.protocol = window.document.location.protocol;
     if (MEDIA['sip_ws_host'] != null && MEDIA['sip_ws_host'] != '') {
       this.hostname = MEDIA.sip_ws_host;
@@ -1233,59 +1160,6 @@ export default class SIPBridge extends BaseAudioBridge {
 
     // No easy way to expose the client logger to sip.js code so we need to attach it globally
     window.clientLogger = logger;
-  }
-
-  get inputDeviceId() {
-    const sessionInputDeviceId = Storage.getItem(INPUT_DEVICE_ID_KEY);
-
-    if (sessionInputDeviceId) {
-      return sessionInputDeviceId;
-    }
-
-    if (this.media.inputDeviceId) {
-      return this.media.inputDeviceId;
-    }
-
-    if (this.activeSession) {
-      return this.activeSession.inputDeviceId;
-    }
-
-    return DEFAULT_INPUT_DEVICE_ID;
-  }
-
-  set inputDeviceId(deviceId) {
-    Storage.setItem(INPUT_DEVICE_ID_KEY, deviceId);
-    this.media.inputDeviceId = deviceId;
-
-    if (this.activeSession) {
-      this.activeSession.inputDeviceId = deviceId;
-    }
-  }
-
-  get outputDeviceId() {
-    const sessionOutputDeviceId = Storage.getItem(OUTPUT_DEVICE_ID_KEY);
-    if (sessionOutputDeviceId) {
-      return sessionOutputDeviceId;
-    }
-
-    if (this.media.outputDeviceId) {
-      return this.media.outputDeviceId;
-    }
-
-    if (this.activeSession) {
-      return this.activeSession.outputDeviceId;
-    }
-
-    return DEFAULT_OUTPUT_DEVICE_ID;
-  }
-
-  set outputDeviceId(deviceId) {
-    Storage.setItem(OUTPUT_DEVICE_ID_KEY, deviceId);
-    this.media.outputDeviceId = deviceId;
-
-    if (this.activeSession) {
-      this.activeSession.outputDeviceId = deviceId;
-    }
   }
 
   get inputStream() {
@@ -1353,7 +1227,6 @@ export default class SIPBridge extends BaseAudioBridge {
               inputStream,
             }, callback)
               .then((value) => {
-                this.changeOutputDevice(outputDeviceId, true);
                 resolve(value);
               }).catch((reason) => {
                 reject(reason);
@@ -1374,7 +1247,6 @@ export default class SIPBridge extends BaseAudioBridge {
         inputStream,
       }, callback)
         .then((value) => {
-          this.changeOutputDevice(outputDeviceId, true);
           resolve(value);
         }).catch((reason) => {
           reject(reason);
@@ -1409,12 +1281,13 @@ export default class SIPBridge extends BaseAudioBridge {
   }
 
   exitAudio() {
+    if (this.activeSession == null) return Promise.resolve();
+
     return this.activeSession.exitAudio();
   }
 
-  liveChangeInputDevice(deviceId) {
-    this.inputDeviceId = deviceId;
-    return this.activeSession.liveChangeInputDevice(deviceId);
+  setInputStream(stream) {
+    return this.activeSession.setInputStream(stream);
   }
 
   async updateAudioConstraints(constraints) {

@@ -4,22 +4,17 @@ import { defineMessages, injectIntl } from 'react-intl';
 import Icon from '/imports/ui/components/common/icon/component';
 import Styled from './styles';
 import { ACTIONS, PANELS } from '../../../layout/enums';
-import BreakoutRemainingTime from '/imports/ui/components/breakout-room/breakout-remaining-time/container';
+import BreakoutRemainingTime from '/imports/ui/components/common/remaining-time/breakout-duration/component';
 
 const intlMessages = defineMessages({
   breakoutTitle: {
     id: 'app.createBreakoutRoom.title',
     description: 'breakout title',
   },
-  breakoutTimeRemaining: {
-    id: 'app.createBreakoutRoom.duration',
-    description: 'Message that tells how much time is remaining for the breakout room',
-  },
 });
 
 const BreakoutRoomItem = ({
   hasBreakoutRoom,
-  breakoutRoom,
   sidebarContentPanel,
   layoutContextDispatch,
   intl,
@@ -53,7 +48,12 @@ const BreakoutRoomItem = ({
               onClick={toggleBreakoutPanel}
               data-test="breakoutRoomsItem"
               aria-label={intl.formatMessage(intlMessages.breakoutTitle)}
-              onKeyPress={() => {}}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  toggleBreakoutPanel();
+                }
+              }}
             >
               <Icon iconName="rooms" />
               <div aria-hidden>
@@ -61,10 +61,7 @@ const BreakoutRoomItem = ({
                   {intl.formatMessage(intlMessages.breakoutTitle)}
                 </Styled.BreakoutTitle>
                 <Styled.BreakoutDuration>
-                  <BreakoutRemainingTime
-                    messageDuration={intlMessages.breakoutTimeRemaining}
-                    breakoutRoom={breakoutRoom}
-                  />
+                  <BreakoutRemainingTime />
                 </Styled.BreakoutDuration>
               </div>
             </Styled.ListItem>

@@ -1,7 +1,8 @@
 [Unit]
 Description=BigBlueButton resque worker for recordings
-Wants=redis.service
-After=redis.service
+Wants=redis-server.service
+After=redis-server.service
+PartOf=bigbluebutton.target
 
 [Service]
 Type=simple
@@ -13,6 +14,7 @@ Environment=COUNT=1
 User=bigbluebutton
 Restart=always
 RestartSec=3
+Nice=19
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=multi-user.target bigbluebutton.target

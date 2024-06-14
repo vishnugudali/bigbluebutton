@@ -4,12 +4,17 @@ import { defineMessages, injectIntl } from 'react-intl';
 import { toPng } from 'html-to-image';
 import { toast } from 'react-toastify';
 import logger from '/imports/startup/client/logger';
+import {
+  PresentationDropdownItemType,
+} from 'bigbluebutton-html-plugin-sdk/dist/cjs/extensible-areas/presentation-dropdown-item/enums';
+
 import Styled from './styles';
+import BBBMenu from '/imports/ui/components/common/menu/component';
 import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import { ACTIONS } from '/imports/ui/components/layout/enums';
+import deviceInfo from '/imports/utils/deviceInfo';
 import browserInfo from '/imports/utils/browserInfo';
-
-const OLD_MINIMIZE_BUTTON_ENABLED = Meteor.settings.public.presentation.oldMinimizeButton;
+import AppService from '/imports/ui/components/app/service';
 
 const intlMessages = defineMessages({
   downloading: {
@@ -43,7 +48,7 @@ const intlMessages = defineMessages({
     defaultMessage: 'Minimize',
   },
   optionsLabel: {
-    id: 'app.navBar.settingsDropdown.optionsLabel',
+    id: 'app.navBar.optionsDropdown.optionsLabel',
     description: 'Options button label',
     defaultMessage: 'Options',
   },
@@ -52,6 +57,19 @@ const intlMessages = defineMessages({
     description: 'Snapshot of current slide label',
     defaultMessage: 'Snapshot of current slide',
   },
+  whiteboardLabel: {
+    id: 'app.shortcut-help.whiteboard',
+    description: 'used for aria whiteboard options button label',
+    defaultMessage: 'Whiteboard',
+  },
+  hideToolsDesc: {
+    id: 'app.presentation.presentationToolbar.hideToolsDesc',
+    description: 'Hide toolbar label',
+  },
+  showToolsDesc: {
+    id: 'app.presentation.presentationToolbar.showToolsDesc',
+    description: 'Show toolbar label',
+  },
 });
 
 const propTypes = {
@@ -59,23 +77,40 @@ const propTypes = {
     formatMessage: PropTypes.func.isRequired,
   }).isRequired,
   handleToggleFullscreen: PropTypes.func.isRequired,
-  isDropdownOpen: PropTypes.bool,
   isFullscreen: PropTypes.bool,
   elementName: PropTypes.string,
   fullscreenRef: PropTypes.instanceOf(Element),
-  screenshotRef: PropTypes.instanceOf(Element),
   meetingName: PropTypes.string,
   isIphone: PropTypes.bool,
+  elementId: PropTypes.string,
+  elementGroup: PropTypes.string,
+  currentElement: PropTypes.string,
+  currentGroup: PropTypes.string,
+  layoutContextDispatch: PropTypes.func.isRequired,
+  isRTL: PropTypes.bool,
+  tldrawAPI: PropTypes.shape({
+    getSvg: PropTypes.func.isRequired,
+    getCurrentPageShapes: PropTypes.func.isRequired,
+  }),
+  presentationDropdownItems: PropTypes.arrayOf(PropTypes.shape({
+    id: PropTypes.string,
+    type: PropTypes.string,
+  })).isRequired,
 };
 
 const defaultProps = {
-  isDropdownOpen: false,
+  allowSnapshotOfCurrentSlide: PropTypes.bool.isRequired,
   isIphone: false,
   isFullscreen: false,
+  isRTL: false,
   elementName: '',
   meetingName: '',
   fullscreenRef: null,
-  screenshotRef: null,
+  elementId: '',
+  elementGroup: '',
+  currentElement: '',
+  currentGroup: '',
+  tldrawAPI: null,
 };
 
 const PresentationMenu = (props) => {
@@ -88,11 +123,20 @@ const PresentationMenu = (props) => {
     currentElement,
     currentGroup,
     fullscreenRef,
-    getScreenshotRef,
+    tldrawAPI,
     handleToggleFullscreen,
     layoutContextDispatch,
     meetingName,
     isIphone,
+    isRTL,
+    isToolbarVisible,
+    setIsToolbarVisible,
+    allowSnapshotOfCurrentSlide,
+    presentationDropdownItems,
+    slideNum,
+    currentUser,
+    whiteboardId,
+    persistShape
   } = props;
 
   const [state, setState] = useState({
@@ -108,6 +152,73 @@ const PresentationMenu = (props) => {
     ? intl.formatMessage(intlMessages.exitFullscreenLabel)
     : intl.formatMessage(intlMessages.fullscreenLabel)
   );
+  
+  const formattedVisibilityLabel = (visible) => (visible
+    ? intl.formatMessage(intlMessages.hideToolsDesc)
+    : intl.formatMessage(intlMessages.showToolsDesc)
+  );
+
+  const extractShapes = (savedState) => {
+    let data;
+
+    // Check if savedState is a string (JSON) or an object
+    if (typeof savedState === 'string') {
+      try {
+        data = JSON.parse(savedState);
+      } catch (e) {
+        console.error('Error parsing JSON:', e);
+        return {};
+      }
+    } else if (typeof savedState === 'object' && savedState !== null) {
+      data = savedState;
+    } else {
+      console.error('Invalid savedState type:', typeof savedState);
+      return {};
+    }
+
+    // Check if 'records' key exists and extract shapes into an object keyed by shape ID
+    if (data && data.records) {
+      return data.records.reduce((acc, record) => {
+        if (record.typeName === 'shape') {
+          acc[record.id] = record;
+        }
+        return acc;
+      }, {});
+    }
+
+    return {};
+  };
+
+  const handleFileInput = (event) => {
+    const fileInput = event.target;
+    const file = fileInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const fileContent = e.target.result;
+        const dataObj = extractShapes(JSON.parse(fileContent));
+        const dataArray = Object.values(dataObj);
+        dataArray.forEach(shape => {
+          shape.parentId = `page:${slideNum}`;
+          shape.meta.createdBy = currentUser.userId;
+          persistShape(shape, whiteboardId, currentUser.isModerator);
+        });
+      };
+      reader.readAsText(file);
+
+      // Reset the file input
+      fileInput.value = '';
+    }
+  };
+
+  const handleFileClick = () => {
+    const fileInput = document.getElementById('hiddenFileInput');
+    if (fileInput) {
+      fileInput.click();
+    } else {
+      console.error('File input not found');
+    }
+  };
 
   function renderToastContent() {
     const { loading, hasError } = state;
@@ -145,6 +256,7 @@ const PresentationMenu = (props) => {
           key: 'list-item-fullscreen',
           dataTest: 'presentationFullscreen',
           label: formattedLabel(isFullscreen),
+          icon: isFullscreen ? 'exit_fullscreen' : 'fullscreen',
           onClick: () => {
             handleToggleFullscreen(fullscreenRef);
             const newElement = (elementId === currentElement) ? '' : elementId;
@@ -162,14 +274,17 @@ const PresentationMenu = (props) => {
       );
     }
 
+    const { isIos } = deviceInfo;
     const { isSafari } = browserInfo;
 
-    if (!isSafari) {
+    if (allowSnapshotOfCurrentSlide) {
       menuItems.push(
         {
           key: 'list-item-screenshot',
           label: intl.formatMessage(intlMessages.snapshotLabel),
-          onClick: () => {
+          dataTest: 'presentationSnapshot',
+          icon: 'video',
+          onClick: async () => {
             setState({
               loading: true,
               hasError: false,
@@ -185,12 +300,47 @@ const PresentationMenu = (props) => {
               },
             });
 
+            // This is a workaround to a conflict of the
+            // dark mode's styles and the html-to-image lib.
+            // Issue:
+            //  https://github.com/bubkoo/html-to-image/issues/370
+            const darkThemeState = AppService.isDarkThemeEnabled();
+            AppService.setDarkTheme(false);
+
             try {
-              const wbRef = document.getElementById('Navbar')?.nextSibling?.childNodes[1]?.querySelector('[tabindex = "0"]');
-              toPng(wbRef, {
-                width: window.screen.width,
-                height: window.screen.height,
-              }).then((data) => {
+              // filter shapes that are inside the slide
+              const backgroundShape = tldrawAPI.getCurrentPageShapes().find((s) => s.id === `shape:BG-${slideNum}`);
+              const shapes = tldrawAPI.getCurrentPageShapes().filter(
+                (shape) => shape.x <= backgroundShape.props.w
+                  && shape.y <= backgroundShape.props.h
+                  && shape.x >= 0
+                  && shape.y >= 0,
+              );
+              const svgElem = await tldrawAPI.getSvg(shapes.map((shape) => shape.id));
+
+              // workaround for ios
+              if (isIos || isSafari) {
+                svgElem.setAttribute('width', backgroundShape.props.w);
+                svgElem.setAttribute('height', backgroundShape.props.h);
+                svgElem.setAttribute('viewBox', `1 1 ${backgroundShape.props.w} ${backgroundShape.props.h}`);
+
+                const svgString = new XMLSerializer().serializeToString(svgElem);
+                const blob = new Blob([svgString], { type: 'image/svg+xml' });
+
+                const data = URL.createObjectURL(blob);
+                const anchor = document.createElement('a');
+                anchor.href = data;
+                anchor.setAttribute(
+                  'download',
+                  `${elementName}_${meetingName}_${new Date().toISOString()}.svg`,
+                );
+                anchor.click();
+              } else {
+                const width = svgElem?.width?.baseVal?.value ?? window.screen.width;
+                const height = svgElem?.height?.baseVal?.value ?? window.screen.height;
+
+                const data = await toPng(svgElem, { width, height, backgroundColor: '#FFF' });
+
                 const anchor = document.createElement('a');
                 anchor.href = data;
                 anchor.setAttribute(
@@ -198,32 +348,73 @@ const PresentationMenu = (props) => {
                   `${elementName}_${meetingName}_${new Date().toISOString()}.png`,
                 );
                 anchor.click();
-  
-                setState({
-                  loading: false,
-                  hasError: false,
-                });
-              }).catch((error) => {
-                logger.warn({
-                  logCode: 'presentation_snapshot_error',
-                  extraInfo: error,
-                });
-  
-                setState({
-                  loading: false,
-                  hasError: true,
-                });
+              }
+
+              setState({
+                loading: false,
+                hasError: false,
               });
-            } catch (err) {
+            } catch (e) {
+              setState({
+                loading: false,
+                hasError: true,
+              });
+
               logger.warn({
                 logCode: 'presentation_snapshot_error',
-                extraInfo: err,
+                extraInfo: e,
               });
+            } finally {
+              // Workaround
+              AppService.setDarkTheme(darkThemeState);
             }
           },
         },
       );
     }
+
+    menuItems.push(
+      {
+        key: 'list-item-toolvisibility',
+        dataTest: 'toolVisibility',
+        label: formattedVisibilityLabel(isToolbarVisible),
+        icon: isToolbarVisible ? 'close' : 'pen_tool',
+        onClick: () => {
+          setIsToolbarVisible(!isToolbarVisible);
+        },
+      },
+    );
+
+    if (props.amIPresenter) {
+      menuItems.push({
+        key: 'list-item-load-shapes',
+        dataTest: 'loadShapes',
+        label: 'Load .tldr Data',
+        icon: 'pen_tool',
+        onClick: handleFileClick,
+      });
+    }
+
+    presentationDropdownItems.forEach((item, index) => {
+      switch (item.type) {
+        case PresentationDropdownItemType.OPTION:
+          menuItems.push({
+            key: `${item.id}-${index}`,
+            label: item.label,
+            icon: item.icon,
+            onClick: item.onClick,
+          });
+          break;
+        case PresentationDropdownItemType.SEPARATOR:
+          menuItems.push({
+            key: `${item.id}-${index}`,
+            isSeparator: true,
+          });
+          break;
+        default:
+          break;
+      }
+    });
 
     return menuItems;
   }
@@ -253,54 +444,53 @@ const PresentationMenu = (props) => {
   if (options.length === 0) {
     const undoCtrls = document.getElementById('TD-Styles')?.nextSibling;
     if (undoCtrls?.style) {
-      undoCtrls.style = "padding:0px";
+      undoCtrls.style = 'padding:0px';
     }
-    return null
-  };
+    const styleTool = document.getElementById('TD-Styles')?.parentNode;
+    if (styleTool?.style) {
+      styleTool.style = 'right:0px';
+    }
+    return null;
+  }
 
   return (
-    <Styled.Right>
-      <TooltipContainer title={intl.formatMessage(intlMessages.optionsLabel)}>
-        <Styled.DropdownButton
-          state={isDropdownOpen ? 'open' : 'closed'}
-          aria-label={intl.formatMessage(intlMessages.optionsLabel)}
-          data-test="whiteboardOptionsButton"
-          onClick={() => setIsDropdownOpen((isOpen) => !isOpen)}
-        >
-          <Styled.ButtonIcon iconName="more" />
-        </Styled.DropdownButton>
-      </TooltipContainer>
-      { isDropdownOpen && (
-        <>
-          <Styled.Overlay onClick={() => setIsDropdownOpen(false)} />
-          <Styled.Dropdown
-            ref={dropdownRef}
-            onBlur={() => setIsDropdownOpen(false)}
-            tabIndex={0}
-          >
-            <Styled.List>
-              { options.map((option) => {
-                const {
-                  label, onClick, key, dataTest,
-                } = option;
-
-                return (
-                  <Styled.ListItem
-                    {...{
-                      onClick,
-                      key,
-                      'data-test': dataTest ?? '',
-                    }}
-                  >
-                    {label}
-                  </Styled.ListItem>
-                );
-              }) }
-            </Styled.List>
-          </Styled.Dropdown>
-        </>
-      ) }
-    </Styled.Right>
+    <Styled.Left id='WhiteboardOptionButton'>
+      <BBBMenu
+        trigger={(
+          <TooltipContainer title={intl.formatMessage(intlMessages.optionsLabel)}>
+            <Styled.DropdownButton
+              state={isDropdownOpen ? 'open' : 'closed'}
+              aria-label={`${intl.formatMessage(intlMessages.whiteboardLabel)} ${intl.formatMessage(intlMessages.optionsLabel)}`}
+              data-test="whiteboardOptionsButton"
+              data-state={isDropdownOpen ? 'open' : 'closed'}
+              onClick={() => {
+                setIsDropdownOpen((isOpen) => !isOpen);
+              }}
+            >
+              <Styled.ButtonIcon iconName="more" />
+            </Styled.DropdownButton>
+          </TooltipContainer>
+        )}
+        opts={{
+          id: 'presentation-dropdown-menu',
+          keepMounted: true,
+          transitionDuration: 0,
+          elevation: 3,
+          getcontentanchorel: null,
+          fullwidth: 'true',
+          anchorOrigin: { vertical: 'bottom', horizontal: isRTL ? 'right' : 'left' },
+          transformOrigin: { vertical: 'top', horizontal: isRTL ? 'right' : 'left' },
+          container: fullscreenRef,
+        }}
+        actions={options}
+      />
+      <input
+        type="file"
+        id="hiddenFileInput"
+        style={{ display: 'none' }}
+        onChange={handleFileInput}
+      />
+    </Styled.Left>
   );
 };
 

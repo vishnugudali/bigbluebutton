@@ -1,11 +1,14 @@
 package org.bigbluebutton.core.running
 
-import akka.actor.ActorContext
+import org.apache.pekko.actor.ActorContext
+import org.bigbluebutton.ClientSettings
+import org.bigbluebutton.ClientSettings.{getConfigPropertyValueByPathAsBooleanOrElse, getConfigPropertyValueByPathAsStringOrElse}
 import org.bigbluebutton.common2.domain.DefaultProps
 import org.bigbluebutton.core.apps._
 import org.bigbluebutton.core.bus._
 import org.bigbluebutton.core.models._
 import org.bigbluebutton.core.OutMessageGateway
+import org.bigbluebutton.core.apps.pads.PadslHdlrHelpers
 import org.bigbluebutton.core2.MeetingStatus2x
 
 object RunningMeeting {
@@ -32,16 +35,20 @@ class RunningMeeting(val props: DefaultProps, outGW: OutMessageGateway,
   private val polls2x = new Polls
   private val guestsWaiting = new GuestsWaiting
   private val deskshareModel = new ScreenshareModel
+  private val audioCaptions = new AudioCaptions
+  private val timerModel = new TimerModel
+  val clientSettings: Map[String, Object] = ClientSettings.getClientSettingsWithOverride(props.overrideClientSettings)
 
   // meetingModel.setGuestPolicy(props.usersProp.guestPolicy)
 
   // We extract the meeting handlers into this class so it is
   // easy to test.
-  private val liveMeeting = new LiveMeeting(props, meetingStatux2x, deskshareModel, chatModel, externalVideoModel,
-    layouts, pads, registeredUsers, polls2x, wbModel, presModel, captionModel,
-    webcams, voiceUsers, users2x, guestsWaiting)
+  private val liveMeeting = new LiveMeeting(props, meetingStatux2x, deskshareModel, audioCaptions, timerModel,
+    chatModel, externalVideoModel, layouts, pads, registeredUsers, polls2x, wbModel, presModel, captionModel,
+    webcams, voiceUsers, users2x, guestsWaiting, clientSettings)
 
   GuestsWaiting.setGuestPolicy(
+    liveMeeting.props.meetingProp.intId,
     liveMeeting.guestsWaiting,
     GuestPolicy(props.usersProp.guestPolicy, SystemUser.ID)
   )

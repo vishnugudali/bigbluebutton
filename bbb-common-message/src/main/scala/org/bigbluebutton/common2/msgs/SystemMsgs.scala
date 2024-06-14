@@ -35,7 +35,7 @@ case class GetAllMeetingsReqMsg(
     header: BbbCoreBaseHeader,
     body:   GetAllMeetingsReqMsgBody
 ) extends BbbCoreMsg
-case class GetAllMeetingsReqMsgBody(requesterId: String, html5InstanceId: Int)
+case class GetAllMeetingsReqMsgBody(requesterId: String)
 
 object GetRunningMeetingsReqMsg { val NAME = "GetRunningMeetingsReqMsg" }
 case class GetRunningMeetingsReqMsg(
@@ -231,6 +231,61 @@ case class UnpublishedRecordingSysMsgBody(recordId: String)
 object DeletedRecordingSysMsg { val NAME = "DeletedRecordingSysMsg" }
 case class DeletedRecordingSysMsg(header: BbbCoreBaseHeader, body: DeletedRecordingSysMsgBody) extends BbbCoreMsg
 case class DeletedRecordingSysMsgBody(recordId: String)
+
+/**
+ * Sent from akka-apps to graphql-middleware
+ */
+object CheckGraphqlMiddlewareAlivePingSysMsg { val NAME = "CheckGraphqlMiddlewareAlivePingSysMsg" }
+case class CheckGraphqlMiddlewareAlivePingSysMsg(
+    header: BbbCoreHeaderWithMeetingId,
+    body:   CheckGraphqlMiddlewareAlivePingSysMsgBody
+) extends BbbCoreMsg
+case class CheckGraphqlMiddlewareAlivePingSysMsgBody(middlewareUID: String)
+
+/**
+ * Sent from graphql-middleware to akka-apps
+ */
+object CheckGraphqlMiddlewareAlivePongSysMsg { val NAME = "CheckGraphqlMiddlewareAlivePongSysMsg" }
+case class CheckGraphqlMiddlewareAlivePongSysMsg(
+    header: BbbCoreBaseHeader,
+    body:   CheckGraphqlMiddlewareAlivePongSysMsgBody
+) extends BbbCoreMsg
+case class CheckGraphqlMiddlewareAlivePongSysMsgBody(middlewareUID: String)
+
+/**
+ * Sent from akka-apps to graphql-middleware
+ */
+object ForceUserGraphqlReconnectionSysMsg { val NAME = "ForceUserGraphqlReconnectionSysMsg" }
+case class ForceUserGraphqlReconnectionSysMsg(
+    header: BbbCoreHeaderWithMeetingId,
+    body:   ForceUserGraphqlReconnectionSysMsgBody
+) extends BbbCoreMsg
+case class ForceUserGraphqlReconnectionSysMsgBody(meetingId: String, userId: String, sessionToken: String, reason: String)
+
+/**
+ * Sent from graphql-middleware to akka-apps
+ */
+
+object UserGraphqlReconnectionForcedEvtMsg { val NAME = "UserGraphqlReconnectionForcedEvtMsg" }
+case class UserGraphqlReconnectionForcedEvtMsg(
+    header: BbbCoreBaseHeader,
+    body:   UserGraphqlReconnectionForcedEvtMsgBody
+) extends BbbCoreMsg
+case class UserGraphqlReconnectionForcedEvtMsgBody(middlewareUID: String, sessionToken: String, browserConnectionId: String)
+
+object UserGraphqlConnectionEstablishedSysMsg { val NAME = "UserGraphqlConnectionEstablishedSysMsg" }
+case class UserGraphqlConnectionEstablishedSysMsg(
+    header: BbbCoreBaseHeader,
+    body:   UserGraphqlConnectionEstablishedSysMsgBody
+) extends BbbCoreMsg
+case class UserGraphqlConnectionEstablishedSysMsgBody(middlewareUID: String, sessionToken: String, browserConnectionId: String)
+
+object UserGraphqlConnectionClosedSysMsg { val NAME = "UserGraphqlConnectionClosedSysMsg" }
+case class UserGraphqlConnectionClosedSysMsg(
+    header: BbbCoreBaseHeader,
+    body:   UserGraphqlConnectionClosedSysMsgBody
+) extends BbbCoreMsg
+case class UserGraphqlConnectionClosedSysMsgBody(middlewareUID: String, sessionToken: String, browserConnectionId: String)
 
 /**
  * Sent from akka-apps to bbb-web to inform a summary of the meeting activities

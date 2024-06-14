@@ -1,7 +1,7 @@
 package org.bigbluebutton.core.apps.whiteboard
 
-import akka.actor.ActorContext
-import akka.event.Logging
+import org.apache.pekko.actor.ActorContext
+import org.apache.pekko.event.Logging
 import org.bigbluebutton.core.running.LiveMeeting
 import org.bigbluebutton.common2.msgs.AnnotationVO
 import scala.collection.immutable.{ Map }
@@ -11,7 +11,7 @@ case class Whiteboard(
     multiUser:      Array[String],
     oldMultiUser:   Array[String],
     changedModeOn:  Long,
-    annotationsMap: Map[String, Map[String, AnnotationVO]]
+    annotationsMap: Map[String, AnnotationVO]
 )
 
 class WhiteboardApp2x(implicit val context: ActorContext)
@@ -24,9 +24,16 @@ class WhiteboardApp2x(implicit val context: ActorContext)
 
   val log = Logging(context.system, getClass)
 
-  def sendWhiteboardAnnotations(whiteboardId: String, requesterId: String, annotations: Array[AnnotationVO], liveMeeting: LiveMeeting): Array[AnnotationVO] = {
+  def sendWhiteboardAnnotations(
+      whiteboardId: String,
+      requesterId:  String,
+      annotations:  Array[AnnotationVO],
+      liveMeeting:  LiveMeeting,
+      isPresenter:  Boolean,
+      isModerator:  Boolean
+  ): Array[AnnotationVO] = {
     //    println("Received whiteboard annotation. status=[" + status + "], annotationType=[" + annotationType + "]")
-    liveMeeting.wbModel.addAnnotations(whiteboardId, requesterId, annotations)
+    liveMeeting.wbModel.addAnnotations(whiteboardId, liveMeeting.props.meetingProp.intId, requesterId, annotations, isPresenter, isModerator)
   }
 
   def getWhiteboardAnnotations(whiteboardId: String, liveMeeting: LiveMeeting): Array[AnnotationVO] = {
@@ -34,12 +41,15 @@ class WhiteboardApp2x(implicit val context: ActorContext)
     liveMeeting.wbModel.getHistory(whiteboardId)
   }
 
-  def clearWhiteboard(whiteboardId: String, requesterId: String, liveMeeting: LiveMeeting): Option[Boolean] = {
-    liveMeeting.wbModel.clearWhiteboard(whiteboardId, requesterId)
-  }
-
-  def deleteWhiteboardAnnotations(whiteboardId: String, requesterId: String, annotationsIds: Array[String], liveMeeting: LiveMeeting): Array[String] = {
-    liveMeeting.wbModel.deleteAnnotations(whiteboardId, requesterId, annotationsIds)
+  def deleteWhiteboardAnnotations(
+      whiteboardId:   String,
+      requesterId:    String,
+      annotationsIds: Array[String],
+      liveMeeting:    LiveMeeting,
+      isPresenter:    Boolean,
+      isModerator:    Boolean
+  ): Array[String] = {
+    liveMeeting.wbModel.deleteAnnotations(whiteboardId, liveMeeting.props.meetingProp.intId, requesterId, annotationsIds, isPresenter, isModerator)
   }
 
   def getWhiteboardAccess(whiteboardId: String, liveMeeting: LiveMeeting): Array[String] = {
@@ -47,7 +57,7 @@ class WhiteboardApp2x(implicit val context: ActorContext)
   }
 
   def modifyWhiteboardAccess(whiteboardId: String, multiUser: Array[String], liveMeeting: LiveMeeting) {
-    liveMeeting.wbModel.modifyWhiteboardAccess(whiteboardId, multiUser)
+    liveMeeting.wbModel.modifyWhiteboardAccess(liveMeeting.props.meetingProp.intId, whiteboardId, multiUser)
   }
 
   def filterWhiteboardMessage(whiteboardId: String, userId: String, liveMeeting: LiveMeeting): Boolean = {
