@@ -9,6 +9,7 @@ import { Layout } from '../../../layout/layoutTypes';
 import { ACTIONS, PANELS } from '../../../layout/enums';
 import ChatActions from './chat-actions/component';
 import { ChatHeader as Header } from '../chat-message-list/page/chat-message/styles';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 interface ChatHeaderProps {
   chatId: string;
@@ -132,7 +133,7 @@ const ChatHeaderContainer: React.FC = () => {
   }
   const isPublicChat = chatData.chat[0]?.public;
   const title = isPublicChat ? intl.formatMessage(intlMessages.titlePublic)
-    : intl.formatMessage(intlMessages.titlePrivate, { participantName: chatData?.chat[0]?.participant?.name });
+    : intl.formatMessage(intlMessages.titlePrivate, { participantName: extractUsername(chatData?.chat[0]?.participant?.name) });
   return (
     <>
       <h2 className="sr-only">{title}</h2>

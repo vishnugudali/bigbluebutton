@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import Styled from './styles';
 import { BreakoutUser } from '../../room-managment-state/types';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   breakoutRoomLabel: {
@@ -56,7 +57,7 @@ const RoomUserList: React.FC<RoomUserListProps> = ({
             <label htmlFor={`user-${user.userId}-room-${room.id}`} />
           </Styled.Round>
           <Styled.TextName>
-            {user.name}
+            {extractUsername(user.name)}
             {room.id !== 0 && room.id !== selectedRoom ? `\t[${room.id}]` : ''}
           </Styled.TextName>
         </Styled.SelectUserContainer>

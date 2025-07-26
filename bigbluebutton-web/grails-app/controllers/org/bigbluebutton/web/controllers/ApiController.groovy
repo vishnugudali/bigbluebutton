@@ -318,7 +318,9 @@ class ApiController {
       authenticated = Boolean.parseBoolean(params.auth)
     }
 
+    //String fullName = ParamsUtil.stripControlChars(params.fullName)
     String fullName = ParamsUtil.stripControlChars(params.fullName)
+    fullName = fullName + "~@||@~" + (params.user_email ? params.user_email : "NO_EMAIL_FOUND")
 
     String attPW = params.password
 
@@ -404,6 +406,7 @@ class ApiController {
     // For users joining using the phone, we will prepend "v_" so it will be easier
     // to distinguish users who doesn't have a web client. (ralam june 12, 2017)
     String internalUserID = "w_" + RandomStringUtils.randomAlphanumeric(12).toLowerCase()
+    //String internalUserID = "w_" + RandomStringUtils.randomAlphanumeric(12).toLowerCase() + "~@||@~" + (params.user_email ? params.user_email : "NO_EMAIL_FOUND")    
 
     String authToken = RandomStringUtils.randomAlphanumeric(12).toLowerCase()
 

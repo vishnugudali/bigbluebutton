@@ -6,6 +6,7 @@ import usePreviousValue from '/imports/ui/hooks/usePreviousValue';
 import { addAlert } from './service';
 import useDeduplicatedSubscription from '../../core/hooks/useDeduplicatedSubscription';
 import logger from '/imports/startup/client/logger';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   newMsgAria: {
@@ -34,7 +35,7 @@ const ScreenReaderAlertAdapter = () => {
         const previousChat = previousChats && previousChats.find((c) => c.chatId === chat.chatId);
 
         if (!previousChat || chat.totalUnread > previousChat.totalUnread) {
-          const name = chat.participant?.name ?? intl.formatMessage(intlMessages.publicChatName);
+          const name = extractUsername(chat.participant?.name) ?? intl.formatMessage(intlMessages.publicChatName);
           addAlert(`${intl.formatMessage(intlMessages.newMsgAria, { chatName: name })}`);
         }
       });

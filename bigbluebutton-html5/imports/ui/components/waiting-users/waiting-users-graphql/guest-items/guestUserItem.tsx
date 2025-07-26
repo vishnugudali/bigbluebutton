@@ -4,6 +4,8 @@ import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
 import Styled from '../styles';
 import { getNameInitials } from '../service';
 import TextInput from '/imports/ui/components/text-input/component';
+import { extractUsername } from '/imports/utils/usernameUtils';
+import { escapeHTML } from '/imports/utils/escapeHTML';
 
 const intlMessages = defineMessages({
   accept: {
@@ -45,6 +47,7 @@ const renderGuestUserItem = (
   const intl = useIntl();
   const Settings = getSettingsSingletonInstance();
   const animations = Settings?.application?.animations;
+  const plainPrivateGuestLobbyMessage = escapeHTML(privateGuestLobbyMessage);
 
   return (
     <React.Fragment key={`user-${userId}`}>
@@ -61,7 +64,7 @@ const renderGuestUserItem = (
             </Styled.Avatar>
           </Styled.UserAvatarContainer>
           <Styled.UserName key={`user-name-${userId}`}>
-            {`[${sequence}] ${name}`}
+            {`[${sequence}] ${extractUsername(name)}`}
           </Styled.UserName>
         </Styled.UserContentContainer>
 
@@ -107,15 +110,14 @@ const renderGuestUserItem = (
           <TextInput
             maxLength={128}
             placeholder={intl.formatMessage(intlMessages.privateInputPlaceholder,
-              { userName: name })}
+              { userName: extractUsername(name) })}
             send={setPrivateGuestLobbyMessage}
           />
           <p>
             <i>
               &quot;
               {privateGuestLobbyMessage && privateGuestLobbyMessage !== ''
-              // eslint-disable-next-line react/no-danger
-                ? <span dangerouslySetInnerHTML={{ __html: privateGuestLobbyMessage }} />
+                ? <span>{plainPrivateGuestLobbyMessage}</span>
                 : intl.formatMessage(intlMessages.emptyMessage)}
               &quot;
             </i>

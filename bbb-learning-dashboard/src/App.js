@@ -25,6 +25,21 @@ const TABS = {
   TIMELINE: 2,
   POLLING: 3,
 };
+
+const processUserNames = (json) => {
+  if (!json || !json.users) return json;
+
+  const processedUsers = Object.entries(json.users).reduce((acc, [userId, user]) => {
+    acc[userId] = {
+      ...user,
+      name: user.name.split('~@||@~')[0], // Remove email part
+    };
+    return acc;
+  }, {});
+
+  return { ...json, users: processedUsers };
+};
+
 const LEARNING_DASHBOARD_LEARN_MORE_LINK = 'learning-dashboard-learn-more-link';
 const LEARNING_DASHBOARD_FEEDBACK_LINK = 'learning-dashboard-feedback-link';
 
@@ -191,7 +206,7 @@ class App extends React.Component {
         .then((response) => response.json())
         .then((json) => {
           this.setState({
-            activitiesJson: convertUserUsessionsFormat(json),
+            activitiesJson: convertUserUsessionsFormat(processUserNames(json)),
             loading: false,
             invalidSessionCount: 0,
             lastUpdated: Date.now(),
@@ -208,7 +223,7 @@ class App extends React.Component {
           if (json.response.returncode === 'SUCCESS') {
             const jsonData = JSON.parse(json.response.data);
             this.setState({
-              activitiesJson: jsonData,
+              activitiesJson: processUserNames(jsonData),
               loading: false,
               invalidSessionCount: 0,
               lastUpdated: Date.now(),
@@ -255,7 +270,7 @@ class App extends React.Component {
     // This line will eliminate duplicates.
     const genericDataColumnTitleList = [...new Set(genericDataColumnTitleWithDuplicates)];
 
-    document.title = `${intl.formatMessage({ id: 'app.learningDashboard.bigbluebuttonTitle', defaultMessage: 'BigBlueButton' })} - ${intl.formatMessage({ id: 'app.learningDashboard.dashboardTitle', defaultMessage: 'Learning Analytics Dashboard' })} - ${activitiesJson.name}`;
+    document.title = `${intl.formatMessage({ id: 'app.learningDashboard.bigbluebuttonTitle', defaultMessage: 'QCOM' })} - ${intl.formatMessage({ id: 'app.learningDashboard.dashboardTitle', defaultMessage: 'Learning Analytics Dashboard' })} - ${activitiesJson.name}`;
 
     function totalOfReactions() {
       if (activitiesJson && activitiesJson.users) {

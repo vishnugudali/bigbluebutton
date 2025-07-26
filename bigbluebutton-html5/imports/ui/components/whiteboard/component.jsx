@@ -39,7 +39,7 @@ import { useMouseEvents, useCursor } from './hooks';
 import { notifyShapeNumberExceeded, getCustomEditorAssetUrls, getCustomAssetUrls } from './service';
 import NoopTool from './custom-tools/noop-tool/component';
 import DeleteSelectedItemsTool from './custom-tools/delete-selected-items/component';
-
+import { extractUsername } from '/imports/utils/usernameUtils';
 const CAMERA_TYPE = 'camera';
 
 // Helper functions
@@ -1862,7 +1862,7 @@ const Whiteboard = React.memo((props) => {
               id,
               currentPageId: `page:${curPageIdRef.current}`,
               userId,
-              userName: name,
+              userName: extractUsername(name),
               cursor,
               color,
             }),

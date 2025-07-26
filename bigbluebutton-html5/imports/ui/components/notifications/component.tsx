@@ -13,6 +13,7 @@ import {
 import Styled from './styles';
 import useDeduplicatedSubscription from '../../core/hooks/useDeduplicatedSubscription';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const Notifications: React.FC = () => {
   const [registeredAt, setRegisteredAt] = React.useState<string>(new Date().toISOString());
@@ -71,7 +72,7 @@ const Notifications: React.FC = () => {
     // special guest alert notification, with user name as title
     if (notification.messageId === 'app.userList.guest.pendingGuestAlert') {
       notify(
-        <Styled.TitleMessage>{notification.messageValues['0']}</Styled.TitleMessage>,
+        <Styled.TitleMessage>{extractUsername(notification.messageValues['0'])}</Styled.TitleMessage>,
         notification.notificationType,
         notification.icon,
         null,

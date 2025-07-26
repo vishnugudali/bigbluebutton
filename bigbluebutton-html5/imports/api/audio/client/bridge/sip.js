@@ -22,6 +22,7 @@ import {
   doGUM,
   stereoUnsupported,
 } from '/imports/api/audio/client/bridge/service';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const CALL_CONNECT_TIMEOUT = 20000;
 const ICE_NEGOTIATION_TIMEOUT = 20000;
@@ -1151,7 +1152,7 @@ export default class SIPBridge extends BaseAudioBridge {
     this.user = {
       userId,
       sessionToken,
-      name: username,
+      name: extractUsername(username),
     };
 
     this.protocol = window.document.location.protocol;

@@ -21,6 +21,7 @@ import { GraphqlDataHookSubscriptionResponse } from '/imports/ui/Types/hook';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import logger from '/imports/startup/client/logger';
 import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const DEBUG_CONSOLE = false;
 
@@ -48,7 +49,7 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
   let element = null;
 
   if (isSingleTyper) {
-    const name = typingUsers[0]?.name;
+    const name = extractUsername(typingUsers[0]?.name);
 
     element = (
       <FormattedMessage
@@ -66,8 +67,8 @@ const TypingIndicator: React.FC<TypingIndicatorProps> = ({
   }
 
   if (isCoupleTyper) {
-    const name = typingUsers[0]?.name;
-    const name2 = typingUsers[1]?.name;
+    const name = extractUsername(typingUsers[0]?.name);
+    const name2 = extractUsername(typingUsers[1]?.name);
 
     element = (
       <FormattedMessage
@@ -187,7 +188,13 @@ const TypingIndicatorContainer: React.FC = () => {
 
   const typingUsersArray = typingUsers
     .filter((user: { user: object; userId: string; }) => user?.user && user?.userId !== currentUser?.userId)
-    .map((user: { user: object; }) => user.user);
+    .map((user: { user: object; }) => {
+      const u = user.user as User;
+      return {
+        ...u,
+        name: extractUsername(u.name)
+      }
+    });
 
   if (locked || !TYPING_INDICATOR_ENABLED || !typingUsers) return null;
 

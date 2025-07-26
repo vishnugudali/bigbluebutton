@@ -6,6 +6,7 @@ import Icon from '/imports/ui/components/common/icon/component';
 import { ENTER } from '/imports/utils/keyCodes';
 import Styled from './styles';
 import TooltipContainer from '/imports/ui/components/common/tooltip/container';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const messages = defineMessages({
   lowerHandsLabel: {
@@ -90,7 +91,7 @@ class RaiseHandNotifier extends Component {
     const { raiseHandUsers, intl } = this.props;
     if (raiseHandUsers.length === 0) return '';
 
-    const _names = raiseHandUsers.map((u) => u.name);
+    const _names = raiseHandUsers.map((u) => extractUsername(u.name));
     const { length } = _names;
     const and = intl.formatMessage(messages.and);
     let formattedNames = '';
@@ -125,7 +126,7 @@ class RaiseHandNotifier extends Component {
     const avatars = users.map((u) => (
       <TooltipContainer
         key={`statusToastAvatar-${u.userId}`}
-        title={intl.formatMessage(messages.lowerHandDescOneUser, { userName: u.name })}
+        title={intl.formatMessage(messages.lowerHandDescOneUser, { userName: extractUsername(u.name) })}
       >
         <Styled.Avatar
           role="button"

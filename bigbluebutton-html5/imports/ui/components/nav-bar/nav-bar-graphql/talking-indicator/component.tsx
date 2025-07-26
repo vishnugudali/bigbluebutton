@@ -17,6 +17,7 @@ import useTalkingUsers from '/imports/ui/core/hooks/useTalkingUsers';
 import { partition } from '/imports/utils/array-utils';
 import logger from '/imports/startup/client/logger';
 import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const TALKING_INDICATORS_MAX = 8;
 
@@ -88,7 +89,7 @@ const TalkingIndicator: React.FC<TalkingIndicatorProps> = ({
       muted,
       color,
       speechLocale,
-      name,
+      name: extractUsername(name),
       userId,
     };
   });
@@ -105,7 +106,7 @@ const TalkingIndicator: React.FC<TalkingIndicatorProps> = ({
 
     const ariaLabel = intl.formatMessage(talking
       ? intlMessages.isTalking : intlMessages.wasTalking, {
-      userName: name,
+      userName: extractUsername(name),
     });
     let icon = talking ? 'unmute' : 'blank';
     icon = muted ? 'mute' : icon;
@@ -132,9 +133,9 @@ const TalkingIndicator: React.FC<TalkingIndicatorProps> = ({
             // @ts-ignore - call signature is misse due the function being wrapped
             muteUser(userId, muted, isBreakout, isModerator, toggleVoice);
           }}
-          label={name}
+          label={extractUsername(name)}
           tooltipLabel={!muted && isModerator
-            ? `${intl.formatMessage(intlMessages.muteLabel)} ${name}`
+            ? `${intl.formatMessage(intlMessages.muteLabel)} ${extractUsername(name)}`
             : null}
           data-test={talking ? 'isTalking' : 'wasTalking'}
           aria-label={ariaLabel}

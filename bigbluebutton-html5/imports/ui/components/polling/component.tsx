@@ -20,6 +20,7 @@ import useDeduplicatedSubscription from '../../core/hooks/useDeduplicatedSubscri
 import { useIsPollingEnabled } from '../../services/features';
 import logger from '/imports/startup/client/logger';
 import connectionStatus from '../../core/graphql/singletons/connectionStatus';
+import { applyComprehensiveMasking } from '/imports/utils/maskingUtils';
 
 const intlMessages = defineMessages({
   pollingTitleLabel: {
@@ -105,6 +106,7 @@ const PollingGraphql: React.FC<PollingGraphqlProps> = (props) => {
 
   const handleUpdateResponseInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (responseInput.current) {
+      //responseInput.current.value = applyComprehensiveMasking(validateInput(e.target.value));
       responseInput.current.value = validateInput(e.target.value);
       setTypedAns(responseInput.current.value);
     }
@@ -362,7 +364,7 @@ const PollingGraphqlContainer: React.FC = () => {
     pollSubmitUserTypedVote({
       variables: {
         pollId,
-        answer,
+        answer: applyComprehensiveMasking(answer),
       },
     });
   };

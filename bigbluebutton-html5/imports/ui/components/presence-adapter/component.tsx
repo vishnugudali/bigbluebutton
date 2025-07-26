@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import useAuthData from '/imports/ui/core/local-states/useAuthData';
 import Auth from '/imports/ui/services/auth';
 import Session from '/imports/ui/services/storage/in-memory';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 interface PresenceAdapterProps {
     children: React.ReactNode;
@@ -28,7 +29,7 @@ const PresenceAdapter: React.FC<PresenceAdapterProps> = ({ children }) => {
       authToken,
       logoutUrl,
       sessionToken,
-      userName,
+      extractUsername(userName),
       extId,
       meetingName,
     );

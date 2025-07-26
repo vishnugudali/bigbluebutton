@@ -16,6 +16,7 @@ import { VideoItem } from '/imports/ui/components/video-provider/types';
 import { ACTIONS } from '/imports/ui/components/layout/enums';
 import { useIsVideoPinEnabledForCurrentUser } from '/imports/ui/components/video-provider/hooks';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   focusLabel: {
@@ -282,7 +283,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
         trigger={(
           <Styled.OptionsButton
             label={intl.formatMessage(intlMessages.squeezedLabel)}
-            aria-label={`${name} ${intl.formatMessage(intlMessages.squeezedLabel)}`}
+            aria-label={`${extractUsername(name)} ${intl.formatMessage(intlMessages.squeezedLabel)}`}
             data-test="webcamOptionsMenuSqueezed"
             icon="device_list_selector"
             ghost
@@ -312,7 +313,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
                 $isRTL={isRTL}
                 role="button"
               >
-                {name}
+                {extractUsername(name)}
               </Styled.DropdownTrigger>
             )}
             actions={getAvailableActions()}
@@ -332,7 +333,7 @@ const UserActions: React.FC<UserActionProps> = (props) => {
         : (
           <Styled.Dropdown $isFirefox={isFirefox}>
             <Styled.UserName $noMenu={numOfStreams < 3}>
-              {name}
+              {extractUsername(name)}
             </Styled.UserName>
           </Styled.Dropdown>
         )}

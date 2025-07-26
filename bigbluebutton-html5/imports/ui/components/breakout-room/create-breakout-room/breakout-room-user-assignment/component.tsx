@@ -6,6 +6,7 @@ import Styled from '../styles';
 import Auth from '/imports/ui/services/auth';
 import ManageRoomLabel from '../manage-room-label/component';
 import { ChildComponentProps } from '../room-managment-state/types';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   breakoutRoomTitle: {
@@ -283,7 +284,7 @@ const BreakoutRoomUserAssignment: React.FC<ChildComponentProps> = ({
             onDragEnd={dragEnd}
           >
             <span>
-              <span>{user.name}</span>
+              <span>{extractUsername(user.name)}</span>
               <i>{(isMe(user.userId)) ? ` (${intl.formatMessage(intlMessages.you)})` : ''}</i>
             </span>
             {room !== 0

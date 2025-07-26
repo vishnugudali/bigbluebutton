@@ -50,6 +50,7 @@ import { useStorageKey } from '/imports/ui/services/storage/hooks';
 import ConnectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
 import { VIDEO_TYPES } from '/imports/ui/components/video-provider/enums';
 import createUseSubscription from '/imports/ui/core/hooks/createUseSubscription';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const useVideoStreamsSubscription = createUseSubscription(
   VIDEO_STREAMS_SUBSCRIPTION,
@@ -158,7 +159,7 @@ export const useInfo = () => {
   const voiceBridge = data?.voiceSettings ? data.voiceSettings.voiceConf : null;
   return {
     userId: Auth.userID as string,
-    userName: Auth.fullname as string,
+    userName: extractUsername(Auth.fullname) as string,
     meetingId: Auth.meetingID as string,
     sessionToken: Auth.sessionToken as string,
     voiceBridge,

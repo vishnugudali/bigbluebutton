@@ -20,6 +20,7 @@ import deviceInfo from '/imports/utils/deviceInfo';
 import GuestWaitContainer, { GUEST_STATUSES } from '../guest-wait/component';
 import Legacy from '/imports/ui/components/legacy/component';
 import PluginTopLevelManager from '/imports/ui/components/plugin-top-level-manager/component';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const connectionTimeout = 60000;
 const MESSAGE_TIMEOUT = 3000;
@@ -108,7 +109,7 @@ const PresenceManager: React.FC<PresenceManagerProps> = ({
       authToken,
       logoutUrl,
       sessionToken,
-      userName,
+      userName: extractUsername(userName),
       extId,
       meetingName,
     });
@@ -118,7 +119,7 @@ const PresenceManager: React.FC<PresenceManagerProps> = ({
       authToken,
       logoutUrl,
       sessionToken,
-      userName,
+      userName: extractUsername(userName),
       extId,
       meetingName,
       customLogoUrl,
@@ -198,7 +199,7 @@ const PresenceManager: React.FC<PresenceManagerProps> = ({
           ? (
             <MeetingEndedContainer
               meetingEndedCode={endedReasonCode}
-              endedBy={endedBy}
+              endedBy={extractUsername(endedBy)}
               joinErrorCode={errorCode}
             />
           )
@@ -280,7 +281,7 @@ const PresenceManagerContainer: React.FC<PresenceManagerContainerProps> = ({ chi
       logoutUrl={logoutUrl}
       meetingId={meetingId}
       meetingName={meetingName}
-      userName={userName}
+      userName={extractUsername(userName)}
       extId={extId}
       userId={userId}
       joined={joined}
@@ -288,7 +289,7 @@ const PresenceManagerContainer: React.FC<PresenceManagerContainerProps> = ({ chi
       joinErrorMessage={joinErrorMessage}
       meetingEnded={meeting.ended}
       endedReasonCode={meeting.endedReasonCode}
-      endedBy={meeting.endedByUserName}
+      endedBy={extractUsername(meeting.endedByUserName)}
       ejectReasonCode={ejectReasonCode}
       bannerColor={bannerColor}
       bannerText={bannerText}

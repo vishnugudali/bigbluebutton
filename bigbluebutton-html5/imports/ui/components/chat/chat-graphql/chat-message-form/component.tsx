@@ -47,6 +47,8 @@ import {
 } from './queries';
 import Auth from '/imports/ui/services/auth';
 import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
+import { extractUsername } from '/imports/utils/usernameUtils';
+import { applyComprehensiveMasking } from '/imports/utils/maskingUtils';
 
 const CLOSED_CHAT_LIST_KEY = 'closedChatList';
 const START_TYPING_THROTTLE_INTERVAL = 1000;
@@ -330,6 +332,8 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
       newMessage = e.target.value;
     }
 
+    //newMessage = applyComprehensiveMasking(newMessage);
+
     if (newMessage.length > maxMessageLength) {
       newError = intl.formatMessage(
         messages.errorMaxMessageLength,
@@ -415,7 +419,8 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
     const handleSubmit = (e: React.FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLInputElement> | Event) => {
       e.preventDefault();
 
-      const msg = message;
+      let msg = message;
+      msg = applyComprehensiveMasking(msg);
 
       if (msg.length < minMessageLength || chatSendMessageLoading) return;
 
@@ -710,7 +715,7 @@ const ChatMessageFormContainer: React.FC = () => {
   }));
 
   const title = chat?.participant?.name
-    ? intl.formatMessage(messages.titlePrivate, { participantName: chat?.participant?.name })
+    ? intl.formatMessage(messages.titlePrivate, { participantName: extractUsername(chat?.participant?.name) })
     : intl.formatMessage(messages.titlePublic);
 
   const { data: meeting } = useMeeting((m) => ({
@@ -766,7 +771,7 @@ const ChatMessageFormContainer: React.FC = () => {
   );
 
   if (chat?.participant && !chat.participant.currentlyInMeeting) {
-    return <ChatOfflineIndicator participantName={chat.participant.name} />;
+    return <ChatOfflineIndicator participantName={extractUsername(chat.participant.name)} />;
   }
 
   const CHAT_CONFIG = window.meetingClientSettings.public.chat;

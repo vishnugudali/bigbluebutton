@@ -34,6 +34,7 @@ import {
 } from '../mutations';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
+import { escapeHTML } from '/imports/utils/escapeHTML';
 
 interface LayoutDispatchProps {
   type: string,
@@ -321,6 +322,8 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
     ? authGuestButtonsData.concat(guestButtonsData)
     : guestButtonsData;
 
+  const plainGuestLobbyMessage = escapeHTML(guestLobbyMessage);
+
   return (
     <Styled.Panel data-test="note" isChrome={isChrome}>
       <Header
@@ -346,8 +349,7 @@ const GuestUsersManagementPanel: React.FC<GuestUsersManagementPanelProps> = ({
                 &quot;
                 {
                   guestLobbyMessage && guestLobbyMessage !== ''
-                  // eslint-disable-next-line react/no-danger
-                    ? <span dangerouslySetInnerHTML={{ __html: guestLobbyMessage }} />
+                    ? <span>{plainGuestLobbyMessage}</span>
                     : intl.formatMessage(intlMessages.emptyMessage)
                 }
                 &quot;

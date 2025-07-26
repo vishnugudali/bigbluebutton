@@ -21,6 +21,7 @@ import BreakoutMessageForm from './components/messageForm';
 import { useStopMediaOnMainRoom } from '/imports/ui/components/breakout-room/hooks';
 import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedSubscription';
 import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 interface BreakoutRoomProps {
   breakouts: BreakoutRoomType[];
@@ -281,7 +282,7 @@ const BreakoutRoom: React.FC<BreakoutRoomProps> = ({
                   {breakout.participants
                     .filter((p) => !p.isAudioOnly)
                     .sort((a, b) => a.user.nameSortable.localeCompare(b.user.nameSortable))
-                    .map((u) => u.user.name)
+                    .map((u) => extractUsername(u.user.name))
                     .join(', ')}
                 </Styled.JoinedUserNames>
               </Styled.BreakoutItems>

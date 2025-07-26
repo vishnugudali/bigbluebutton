@@ -16,6 +16,7 @@ import {
   doGUM,
 } from '/imports/api/audio/client/bridge/service';
 import { shouldForceRelay } from '/imports/ui/services/bbb-webrtc-sfu/utils';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const SENDRECV_ROLE = 'sendrecv';
 const RECV_ROLE = 'recv';
@@ -84,7 +85,7 @@ export default class SFUAudioBridge extends BaseAudioBridge {
   constructor(userData) {
     super();
     this.userId = userData.userId;
-    this.name = userData.username;
+    this.name = extractUsername(userData.username);
     this.sessionToken = userData.sessionToken;
     this.broker = null;
     this.reconnecting = false;

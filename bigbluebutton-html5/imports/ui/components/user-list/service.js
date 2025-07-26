@@ -10,6 +10,7 @@ import { notify } from '/imports/ui/services/notification';
 import { FormattedMessage } from 'react-intl';
 import { getDateString } from '/imports/utils/string-utils';
 import { isEmpty } from 'radash';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const DIAL_IN_CLIENT_TYPE = 'dial-in-user';
 
@@ -365,13 +366,13 @@ export const getUserNamesLink = (docTitle, fnSortedLabel, lnSortedLabel, users, 
       const lastPart = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
 
       return ({
-        fullName: u.name,
+        fullName: extractUsername(u.name),
         firstName: u.firstNameSortable ? u.firstNameSortable : nameParts[0],
         lastName: u.lastNameSortable ? u.lastNameSortable : lastPart,
       });
     });
 
-  const getUsernameString = (user) => `${user.fullName}`;
+  const getUsernameString = (user) => `${extractUsername(user.fullName)}`;
 
   const namesByFirstName = userNamesObj.sort(sortUsersByFirstName)
     .map((u) => getUsernameString(u)).join('\r\n');

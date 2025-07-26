@@ -5,6 +5,7 @@ import { isMobile } from '/imports/utils/deviceInfo';
 import logger from '/imports/startup/client/logger';
 import ClickOutside from '/imports/ui/components/click-outside/component';
 import Styled from './styles';
+import { applyComprehensiveMasking } from '/imports/utils/maskingUtils';
 
 const propTypes = {
   placeholder: PropTypes.string,
@@ -49,7 +50,7 @@ class TextInput extends PureComponent {
     const { send } = this.props;
     const { message } = this.state;
 
-    send(message);
+    send(applyComprehensiveMasking(message));
     this.setState({
       message: '',
       showEmojiPicker: false,

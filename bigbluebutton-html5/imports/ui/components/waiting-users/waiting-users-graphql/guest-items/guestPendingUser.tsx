@@ -2,6 +2,7 @@ import React from 'react';
 import Styled from '../styles';
 import { GuestWaitingUser } from '../queries';
 import renderGuestUserItem from './guestUserItem';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const ALLOW_STATUS = 'ALLOW';
 const DENY_STATUS = 'DENY';
@@ -22,7 +23,7 @@ const renderPendingUsers = (
       <Styled.UsersWrapper>
         <Styled.Users role="list">
           {usersArray.map((user, idx) => renderGuestUserItem(
-            user.user.name ?? '',
+            extractUsername(user.user.name ?? ''),
             user.user.color ?? '',
             () => action([user], ALLOW_STATUS),
             () => action([user], DENY_STATUS),

@@ -22,6 +22,7 @@ import Styled from './styles';
 import { LoadingContext } from '../common/loading-screen/loading-screen-HOC/component';
 import logger from '/imports/startup/client/logger';
 import apolloContextHolder from '/imports/ui/core/graphql/apolloContextHolder/apolloContextHolder';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessage = defineMessages({
   410: {
@@ -183,7 +184,7 @@ const MeetingEnded: React.FC<MeetingEndedProps> = ({
 
   const generateEndMessage = useCallback((joinErrorCode: string, meetingEndedCode: string, endedBy: string) => {
     if (!isEmpty(endedBy)) {
-      return intl.formatMessage(intlMessage.messageEndedByUser, { userName: endedBy });
+      return intl.formatMessage(intlMessage.messageEndedByUser, { userName: extractUsername(endedBy) });
     }
     // OR opetaror always returns the first truthy value
 
@@ -194,7 +195,7 @@ const MeetingEnded: React.FC<MeetingEndedProps> = ({
   const confirmRedirect = (isBreakout: boolean, allowRedirect: boolean) => {
     if (isBreakout) window.close();
     if (allowRedirect) {
-      const reason = generateEndMessage(joinErrorCode, meetingEndedCode, endedBy);
+      const reason = generateEndMessage(joinErrorCode, meetingEndedCode, extractUsername(endedBy));
       const finalUrl = reason
         ? `${logoutUrl}${logoutUrl.includes('?') ? '&' : '?'}reason=${encodeURIComponent(reason)}`
         : logoutUrl;
@@ -382,7 +383,7 @@ const MeetingEndedContainer: React.FC<MeetingEndedContainerProps> = ({
 
   return (
     <MeetingEnded
-      endedBy={endedBy}
+      endedBy={extractUsername(endedBy)}
       joinErrorCode={joinErrorCode}
       meetingEndedCode={meetingEndedCode}
       allowRedirect={allowRedirect}

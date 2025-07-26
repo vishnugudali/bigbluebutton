@@ -1,5 +1,8 @@
+import { applyComprehensiveMasking } from '/imports/utils/maskingUtils';
+
 export const messageToMarkdown = (message: string) => {
-  const parsedMessage = message || '';
+  let parsedMessage = message || '';
+  parsedMessage = applyComprehensiveMasking(parsedMessage);
 
   // this function is mostly used to convert links to markdown, so it can skip if it doesn't contain http
   if (parsedMessage.toLowerCase().indexOf('http') === -1) {
@@ -150,7 +153,7 @@ export const messageToMarkdown = (message: string) => {
 export const messageToQuoteMarkdown = (message: string | undefined): string => {
   // this function will try to find the next line that doesn't begin with ``` or image, and is not empty
   if (!message) return '';
-
+   
   const codeBlockRegExp = /^```/;
   const imageRegExp = /^!\[.*\]\(.*\)/;
   const messageChunks = messageToMarkdown(message).split('\n');
