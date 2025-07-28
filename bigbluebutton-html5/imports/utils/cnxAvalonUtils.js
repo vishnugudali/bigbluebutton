@@ -35,7 +35,7 @@ const hasContinuousSpecialChars = (inputString) => {
   const pattern = /([a-zA-Z0-9][._-]?){2}@/g;
   return pattern.test(`${inputString}@`);
 };
-const maskEmail = (regexStr, inputString, i) => {
+const maskEmail = (regexStr, inputString, i, md) => {
   const inputresult = inputString.replace(regexStr, (match, prefix) => {
     const emailPrefix = match.split('@')[0];
     const isPrefixEndsWithSplChar = endsWithAny(emailPrefix, ['.', '_', '-']);
@@ -54,16 +54,20 @@ const maskEmail = (regexStr, inputString, i) => {
       let secondExt = '';
       let firstExt = '';
       let findemail = `${emailPrefix}@${domainname}`;
-      let pattern = i === 3 ? '\\*\\*\\*@\\*\\*\\*\\*\\*' : '\\*\\*@\\*\\*\\*\\*\\*'; // +"."+firstExt+"."+secondExt
+      const p2 = md ? '\\*\\*@\\*\\*\\*\\*\\*' : '**@*****';
+      const p3 = md ? '\\*\\*\\*@\\*\\*\\*\\*\\*' : '***@*****';
+      let pattern = i === 3 ? p3 : p2; // +"."+firstExt+"."+secondExt
       const level1extfound = startsWithAny(level1ext, validExtensions)[1];
-      firstExt = level1ext.replace(level1extfound, '\\*\\*\\*');
+      const pext = md ? '\\*\\*\\*' : '***';
+      firstExt = level1ext.replace(level1extfound, pext);
       if (level1extfound) {
         findemail = `${findemail}.${level1ext}`;
         pattern = `${pattern}.${firstExt}`;
       }
       if (level2ext !== ' ' && validExtensions.includes(level1ext)) {
         const level2extfound = startsWithAny(level2ext, validExtensions)[1];
-        secondExt = level2ext.replace(level2extfound, '\\*\\*\\*');
+        const pext2 = md ? '\\*\\*\\*' : '***';
+        secondExt = level2ext.replace(level2extfound, pext2);
         findemail = `${findemail}.${level2ext}`;
         pattern = `${pattern}.${secondExt}`;
       }
@@ -76,25 +80,24 @@ const maskEmail = (regexStr, inputString, i) => {
   });
   return inputresult;
 };
-const validateEmail = (input) => {
+const validateEmail = (input, md) => {
   let inputresult = input;
   for (let i = 3; i >= 1; i -= 1) {
     const regexGen = `[a-zA-Z0-9._-]{${i}}@([a-zA-Z0-9-]+(\\.(com|coop|co\\.in|org|net|info|biz|us|uk|ca|au|de|gov|edu|mil|int|co|app|blog|tech|guru)+))`;
     const regex = new RegExp(regexGen, 'gm');
 
-    inputresult = maskEmail(regex, inputresult, i);
+    inputresult = maskEmail(regex, inputresult, i, md);
     if (i === 3) {
       // double check and masking  needed for 3 length email
-      inputresult = maskEmail(regex, inputresult, i);
+      inputresult = maskEmail(regex, inputresult, i, md);
     }
   }
   return inputresult;
 };
 
-const emailMasking = (textPhrase) => validateEmail(textPhrase);
+const emailMasking = (textPhrase, md) => validateEmail(textPhrase, md);
 
 const cnxAvalonUtils = {
   emailMasking,
 };
 export default cnxAvalonUtils;
-

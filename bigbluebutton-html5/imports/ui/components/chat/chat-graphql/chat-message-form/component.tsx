@@ -420,7 +420,7 @@ const ChatMessageForm: React.FC<ChatMessageFormProps> = ({
       e.preventDefault();
 
       let msg = message;
-      msg = applyComprehensiveMasking(msg);
+      msg = applyComprehensiveMasking(msg, true);
 
       if (msg.length < minMessageLength || chatSendMessageLoading) return;
 

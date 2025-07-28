@@ -2,7 +2,7 @@ import { applyComprehensiveMasking } from '/imports/utils/maskingUtils';
 
 export const messageToMarkdown = (message: string) => {
   let parsedMessage = message || '';
-  parsedMessage = applyComprehensiveMasking(parsedMessage);
+  parsedMessage = applyComprehensiveMasking(parsedMessage, true);
 
   // this function is mostly used to convert links to markdown, so it can skip if it doesn't contain http
   if (parsedMessage.toLowerCase().indexOf('http') === -1) {
