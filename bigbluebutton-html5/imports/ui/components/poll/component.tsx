@@ -29,6 +29,7 @@ import { useStorageKey } from '../../services/storage/hooks';
 import QuizAndPollTabSelector from './components/QuizAndPollTabSelector';
 import InfoBox from './components/InfoBox';
 import { useIsQuizEnabled } from '../../services/features';
+import { applyComprehensiveMasking } from '/imports/utils/maskingUtils';
 
 const intlMessages = defineMessages({
   pollPaneTitle: {
@@ -479,7 +480,8 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
     index: number,
   ) => {
     const list = [...optList];
-    const validatedVal = validateInput(e.target.value).replace(/\s{2,}/g, ' ');
+    let validatedVal = validateInput(e.target.value).replace(/\s{2,}/g, ' ');
+    validatedVal = applyComprehensiveMasking(validatedVal);
     const charsRemovedCount = e.target.value.length - validatedVal.length;
     const clearError = validatedVal.length > 0 && type !== pollTypes.Response;
     const input = e.target;
@@ -548,7 +550,10 @@ const PollCreationPanel: React.FC<PollCreationPanelProps> = ({
   };
 
   const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const validatedInput = validateInput(e.target.value);
+    
+    let validatedInput = validateInput(e.target.value);
+    validatedInput = applyComprehensiveMasking(validatedInput);
+
     const clearError = validatedInput.length > 0 && type === pollTypes.Response;
 
     if (!customInput) {

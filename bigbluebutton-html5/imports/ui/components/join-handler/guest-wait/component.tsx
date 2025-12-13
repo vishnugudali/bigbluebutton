@@ -8,6 +8,7 @@ import React, {
 import { defineMessages, useIntl } from 'react-intl';
 import { LoadingContext } from '../../common/loading-screen/loading-screen-HOC/component';
 import Styled from './styles';
+import { escapeHTML } from '/imports/utils/escapeHTML';
 
 const REDIRECT_TIMEOUT = 15000;
 
@@ -184,6 +185,7 @@ const GuestWait: React.FC<GuestWaitProps> = (props) => {
   ]);
 
   const hasCustomMessage = guestLobbyMessage && guestLobbyMessage.length > 0;
+  const plainMessage = escapeHTML(message);
 
   return (
     <Styled.Container>
@@ -209,9 +211,9 @@ const GuestWait: React.FC<GuestWaitProps> = (props) => {
           <p
             aria-live="polite"
             data-test="guestMessage"
-            // eslint-disable-next-line react/no-danger
-            dangerouslySetInnerHTML={{ __html: message }}
-          />
+          >
+            {plainMessage}
+          </p>
         )}
         {animate && (
           <Styled.WaitingIndicator>

@@ -3,6 +3,7 @@ import { stripTags, unescapeHtml } from '/imports/utils/string-utils';
 import { IntlShape, defineMessages } from 'react-intl';
 import { ChatMessageType } from '/imports/ui/core/enums/chat';
 import PollService from '/imports/ui/components/poll/service';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   chatClear: {
@@ -49,7 +50,7 @@ export const generateExportedMessages = (
     const hour = date.getHours().toString().padStart(2, '0');
     const min = date.getMinutes().toString().padStart(2, '0');
     const hourMin = `[${hour}:${min}]`;
-    let userName = message.user ? `[${message.user.name} : ${message.user.role}]: ` : '';
+    let userName = message.user ? `[${extractUsername(message.user.name)} : ${message.user.role}]: ` : '';
     let messageText = '';
 
     switch (message.messageType) {
@@ -70,10 +71,10 @@ export const generateExportedMessages = (
 
         messageText = (assignedBy)
           ? `${intl.formatMessage(intlMessages.userIsPresenterSetBy, {
-            presenterName: message.senderName,
-            assignedByName: assignedBy,
+            presenterName:extractUsername(message.senderName),
+            assignedByName: extractUsername(assignedBy),
           })}`
-          : `${intl.formatMessage(intlMessages.userIsPresenter, { presenterName: message.senderName })}`;
+          : `${intl.formatMessage(intlMessages.userIsPresenter, { presenterName: extractUsername(message.senderName) })}`;
         break;
       }
       case ChatMessageType.USER_AWAY_STATUS_MSG: {
@@ -88,7 +89,7 @@ export const generateExportedMessages = (
       default:
         messageText = message.message
           ? htmlDecode(message.message)
-          : intl.formatMessage(intlMessages.deleteMessage, { userName: message.deletedBy?.name });
+          : intl.formatMessage(intlMessages.deleteMessage, { userName:extractUsername(message.deletedBy?.name) });
         break;
     }
     return `${acc}${hourMin} ${userName}${messageText}\n`;

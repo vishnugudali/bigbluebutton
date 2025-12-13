@@ -22,6 +22,7 @@ import CustomizedAxisTick from './CustomizedAxisTick';
 import connectionStatus from '/imports/ui/core/graphql/singletons/connectionStatus';
 import Tooltip from '../../common/tooltip/component';
 import { Layout, Output } from '../../layout/layoutTypes';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   usersTitle: {
@@ -266,7 +267,7 @@ const LiveResult: React.FC<LiveResultProps> = ({
                 {
                   users.map((user) => (
                     <tr key={user.user.userId}>
-                      <Styled.ResultLeft>{user.user.name}</Styled.ResultLeft>
+                      <Styled.ResultLeft>{extractUsername(user.user.name)}</Styled.ResultLeft>
                       <Styled.ResultRight data-test="userVoteLiveResult">
                         {
                           user.optionDescIds.map((optDesc) => {

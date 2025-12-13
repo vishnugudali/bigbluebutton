@@ -58,6 +58,7 @@ import {
   MediaType,
   PUBLIC_GROUP_IDS,
 } from '/imports/ui/components/livekit/selective-subscription/types';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const useVideoStreamsSubscription = createUseSubscription(
   VIDEO_STREAMS_SUBSCRIPTION,
@@ -184,7 +185,7 @@ export const useInfo = () => {
   const voiceBridge = data?.voiceSettings ? data.voiceSettings.voiceConf : null;
   return {
     userId: Auth.userID as string,
-    userName: Auth.fullname as string,
+    userName: extractUsername(Auth.fullname) as string,
     meetingId: Auth.meetingID as string,
     sessionToken: Auth.sessionToken as string,
     voiceBridge,

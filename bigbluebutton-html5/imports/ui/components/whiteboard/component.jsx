@@ -43,6 +43,7 @@ import {
 import NoopTool from './custom-tools/noop-tool/component';
 import DeleteSelectedItemsTool from './custom-tools/delete-selected-items/component';
 import SessionStorage from '/imports/ui/services/storage/session';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const CAMERA_TYPE = 'camera';
 const colorStyles = [
@@ -2224,7 +2225,7 @@ const Whiteboard = React.memo((props) => {
               id,
               currentPageId: `page:${curPageIdRef.current}`,
               userId,
-              userName: name,
+              userName: extractUsername(name),
               cursor,
               color,
             }),

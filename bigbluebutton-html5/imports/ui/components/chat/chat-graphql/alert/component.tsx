@@ -19,7 +19,7 @@ import useDeduplicatedSubscription from '/imports/ui/core/hooks/useDeduplicatedS
 import useSettings from '/imports/ui/services/settings/hooks/useSettings';
 import { SETTINGS } from '/imports/ui/services/settings/enums';
 import Auth from '/imports/ui/services/auth';
-
+import { extractUsername } from '/imports/utils/usernameUtils';
 const intlMessages = defineMessages({
   appToastChatPublic: {
     id: 'app.toast.chat.public',
@@ -134,7 +134,7 @@ const ChatAlertGraphql: React.FC<ChatAlertGraphqlProps> = (props) => {
 
   const createMessage = (msg: Message) => (
     <Styled.PushMessageContent>
-      <Styled.UserNameMessage>{msg.senderName}</Styled.UserNameMessage>
+      <Styled.UserNameMessage>{extractUsername(msg.senderName)}</Styled.UserNameMessage>
       <Styled.ContentMessage>
         {mapTextContent(msg)}
       </Styled.ContentMessage>

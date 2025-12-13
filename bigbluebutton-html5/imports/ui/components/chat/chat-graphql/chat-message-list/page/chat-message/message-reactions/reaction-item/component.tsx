@@ -3,6 +3,7 @@ import { capitalize } from 'radash';
 import TooltipContainer from '/imports/ui/components/common/tooltip/container';
 import { defineMessages, useIntl } from 'react-intl';
 import Styled from './styles';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   reactionLabel: {
@@ -46,7 +47,7 @@ const ReactionItem: React.FC<ReactionItemProps> = (props) => {
 
   let usersLabel = '';
   if (userNames.length) {
-    const users = userNames.join(', ');
+    const users = userNames.map(extractUsername).join(', ');
     usersLabel += users;
 
     if (reactedByMe) {

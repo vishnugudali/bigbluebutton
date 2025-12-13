@@ -13,6 +13,7 @@ import { getLiveKitAudioNetworkData, getLiveKitVideoNetworkData } from '/imports
 import { isLiveKitBridge, liveKitRoom } from '/imports/ui/services/livekit';
 import meetingStaticData from '/imports/ui/core/singletons/meetingStaticData';
 import logger from '/imports/startup/client/logger';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   saved: {
@@ -397,7 +398,7 @@ const getSFUVideoNetworkData = async () => {
 export const getNetworkData = async () => {
   const user = {
     time: new Date(),
-    username: Auth.username,
+    username: extractUsername(Auth.username),
     meeting_name: Auth.confname,
     meeting_id: Auth.meetingID,
     connection_id: Auth.connectionID,

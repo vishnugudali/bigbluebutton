@@ -4,6 +4,7 @@ import { useMutation } from '@apollo/client';
 import Styled from '../styles';
 import { pollTypes, checkPollType } from '../service';
 import { POLL_CREATE } from '../mutations';
+import { applyComprehensiveMasking } from '/imports/utils/maskingUtils';
 
 const intlMessages = defineMessages({
   startPollLabel: {
@@ -146,6 +147,11 @@ const StartPollButton: React.FC<StartPollButtonProps> = ({
           setError(err);
         } else {
           setIsPolling(true);
+ let validatedQuestion = '';
+          if (question.trim() !== '') {
+            validatedQuestion = applyComprehensiveMasking(question);
+          }
+
           const verifiedPollType = checkPollType(
             type,
             optionsList,
@@ -156,14 +162,14 @@ const StartPollButton: React.FC<StartPollButtonProps> = ({
             intl.formatMessage(intlMessages.false),
           );
           const verifiedOptions = optionsList.map((o) => {
-            if (o.val.trim().length > 0) return o.val;
+            if (o.val.trim().length > 0) return applyComprehensiveMasking(o.val);
             return null;
           });
           if (verifiedPollType === pollTypes.Custom) {
             startPoll(
               verifiedPollType,
               secretPoll,
-              question,
+              validatedQuestion,
               multipleResponse,
               isQuiz,
               correctAnswer.text,
@@ -173,7 +179,7 @@ const StartPollButton: React.FC<StartPollButtonProps> = ({
             startPoll(
               verifiedPollType,
               secretPoll,
-              question,
+              validatedQuestion,
               multipleResponse,
               isQuiz,
               correctAnswer.text,

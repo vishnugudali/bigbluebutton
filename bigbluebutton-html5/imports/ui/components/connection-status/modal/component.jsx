@@ -10,6 +10,7 @@ import ConnectionStatusHelper from '../status-helper/component';
 import Auth from '/imports/ui/services/auth';
 import connectionStatus from '../../../core/graphql/singletons/connectionStatus';
 import logger from '/imports/startup/client/logger';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const MIN_TIMEOUT = 3000;
 
@@ -299,7 +300,7 @@ class ConnectionStatusComponent extends PureComponent {
         ? new Date(conn.connectionAliveAt) : new Date();
       return (
         <Styled.Item
-          key={`${conn.user.name}-${conn.user.userId}`}
+          key={`${extractUsername(conn.user.name)}-${conn.user.userId}`}
           last={(index + 1) === connections.length}
           data-test="connectionStatusItemUser"
         >
@@ -320,7 +321,8 @@ class ConnectionStatusComponent extends PureComponent {
                 offline={!conn.user.currentlyInMeeting}
                 data-test={!conn.user.currentlyInMeeting ? 'offlineUser' : null}
               >
-                {conn.user.name}
+                               {extractUsername(conn.user.name)}
+
                 {!conn.user.currentlyInMeeting ? ` (${intl.formatMessage(intlMessages.offline)})` : null}
               </Styled.Text>
             </Styled.Name>

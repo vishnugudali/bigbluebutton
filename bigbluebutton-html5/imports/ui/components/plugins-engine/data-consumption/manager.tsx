@@ -30,6 +30,7 @@ import CustomDataConsumptionHooksErrorBoundary from './error-boundary/handler';
 import UsersBasicInfoHookContainer from './domain/users/users-basic-info/hook-manager';
 import { EssentialHookInformation } from './domain/shared/types';
 import MeetingDataHookContainer from './domain/meeting/meeting-data/hook-manager';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const hooksMap:{
   [key: string]: React.FunctionComponent<GeneralHookManagerProps>
@@ -151,7 +152,7 @@ const PluginDataConsumptionManager: React.FC = () => {
   const currentUser = useCurrentUser(
     (currentUser: Partial<User>) => ({
       userId: currentUser.userId,
-      name: currentUser.name,
+      name: extractUsername(currentUser.name),
       role: currentUser.role,
       presenter: currentUser.presenter,
       cameras: currentUser.cameras,

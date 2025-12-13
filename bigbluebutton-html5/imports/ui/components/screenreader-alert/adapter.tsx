@@ -6,6 +6,7 @@ import { addAlert } from './service';
 import useChat from '/imports/ui/core/hooks/useChat';
 import { GraphqlDataHookSubscriptionResponse } from '/imports/ui/Types/hook';
 import { Chat } from '/imports/ui/Types/chat';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   newMsgAria: {
@@ -36,7 +37,7 @@ const ScreenReaderAlertAdapter = () => {
         const previousChat = previousUnreadChats && previousUnreadChats.find((c) => c.chatId === chat.chatId);
 
         if (!previousChat || chat.totalUnread > previousChat.totalUnread) {
-          const name = chat.participant?.name ?? intl.formatMessage(intlMessages.publicChatName);
+          const name = extractUsername(chat.participant?.name) ?? intl.formatMessage(intlMessages.publicChatName);
           addAlert(`${intl.formatMessage(intlMessages.newMsgAria, { chatName: name })}`);
         }
       });

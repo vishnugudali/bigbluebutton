@@ -54,7 +54,7 @@ import { isMobile } from '/imports/utils/deviceInfo';
 import { layoutSelect } from '/imports/ui/components/layout/context';
 import { Layout } from '/imports/ui/components/layout/layoutTypes';
 import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
-
+import { extractUsername } from '/imports/utils/usernameUtils';
 interface ChatMessageProps {
   message: Message;
   previousMessage: Message;
@@ -483,7 +483,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
         };
       case ChatMessageType.BREAKOUT_ROOM:
         return {
-          name: message.senderName,
+          name: extractUsername(message.senderName),
           color: '#0F70D7',
           isModerator: true,
           isSystemSender: true,
@@ -498,7 +498,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
         };
       case ChatMessageType.API:
         return {
-          name: message.senderName,
+          name: extractUsername(message.senderName),
           color: '#0F70D7',
           isModerator: true,
           isSystemSender: true,
@@ -514,10 +514,10 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
       case ChatMessageType.USER_AWAY_STATUS_MSG: {
         const { away } = JSON.parse(message.messageMetadata);
         const awayMessage = (away)
-          ? `${message.senderName} ${intl.formatMessage(intlMessages.userAway)}`
-          : `${message.senderName} ${intl.formatMessage(intlMessages.userNotAway)}`;
+          ? `${extractUsername(message.senderName)} ${intl.formatMessage(intlMessages.userAway)}`
+          : `${extractUsername(message.senderName)} ${intl.formatMessage(intlMessages.userNotAway)}`;
         return {
-          name: message.senderName,
+          name: extractUsername(message.senderName),
           color: '#0F70D7',
           isModerator: true,
           isSystemSender: true,
@@ -536,12 +536,12 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
         const { assignedBy } = JSON.parse(message.messageMetadata);
         const userIsPresenterMsg = (assignedBy)
           ? `${intl.formatMessage(intlMessages.userIsPresenterSetBy, {
-            presenterName: message.senderName,
-            assignedByName: assignedBy,
+            presenterName: extractUsername(message.senderName),
+            assignedByName: extractUsername(assignedBy),
           })}`
-          : `${intl.formatMessage(intlMessages.userIsPresenter, { presenterName: message.senderName })}`;
+          : `${intl.formatMessage(intlMessages.userIsPresenter, { presenterName: extractUsername(message.senderName) })}`;
         return {
-          name: message.senderName,
+          name: extractUsername(message.senderName),
           color: '#0F70D7',
           isModerator: true,
           isSystemSender: true,
@@ -558,7 +558,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
       }
       case ChatMessageType.PLUGIN: {
         return {
-          name: message.user?.name,
+          name: extractUsername(message.user?.name),
           color: message.user?.color,
           isModerator: message.user?.isModerator,
           isSystemSender: false,
@@ -577,7 +577,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
       case ChatMessageType.TEXT:
       default:
         return {
-          name: message.user?.name,
+          name: extractUsername(message.user?.name),
           color: message.user?.color,
           isModerator: message.user?.isModerator,
           isSystemSender: false,
@@ -627,7 +627,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
       window.dispatchEvent(
         new CustomEvent(ChatEvents.CHAT_REPLY_INTENTION, {
           detail: {
-            username: user?.name,
+            username: extractUsername(user?.name),
             message: messageAsHtml,
             messageId,
             chatId,
@@ -648,7 +648,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
       handler();
     }
   }, [
-    user?.name,
+    extractUsername(user?.name),
     messageAsHtml,
     messageId,
     chatId,
@@ -805,7 +805,7 @@ const ChatMessage = React.forwardRef<ChatMessageRef, ChatMessageProps>(({
       )}
       {deleteTime && (
         <DeleteMessage>
-          {intl.formatMessage(intlMessages.deleteMessage, { userName: message.deletedBy?.name })}
+          {intl.formatMessage(intlMessages.deleteMessage, { userName: extractUsername(message.deletedBy?.name) })}
         </DeleteMessage>
       )}
     </ChatMessageContentWrapper>

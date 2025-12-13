@@ -6,6 +6,7 @@ import { SETTINGS } from '/imports/ui/services/settings/enums';
 import { ChatEvents } from '/imports/ui/core/enums/chat';
 import Tooltip from '/imports/ui/components/common/tooltip/container';
 import { getFirstVisibleLineHtml } from '/imports/ui/components/chat/chat-graphql/service';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   cancel: {
@@ -30,7 +31,7 @@ const ChatReplyIntention = () => {
   useEffect(() => {
     const handleReplyIntention = (e: Event) => {
       if (e instanceof CustomEvent) {
-        setUsername(e.detail.username);
+        setUsername(extractUsername(e.detail.username));
         setMessage(e.detail.message);
         setSequence(e.detail.sequence);
       }

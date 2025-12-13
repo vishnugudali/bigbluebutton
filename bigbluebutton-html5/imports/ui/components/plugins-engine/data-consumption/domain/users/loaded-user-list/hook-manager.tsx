@@ -10,11 +10,12 @@ import formatLoadedUserListDataFromGraphql from './utils';
 import { useLocalUserList } from '/imports/ui/core/hooks/useLoadedUserList';
 import usePreviousValue from '/imports/ui/hooks/usePreviousValue';
 import { GeneralHookManagerProps } from '../../../types';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const LoadedUserListHookContainer = (prop: GeneralHookManagerProps) => {
   const [usersData] = useLocalUserList((user: Partial<User>) => ({
     userId: user.userId,
-    name: user.name,
+    name: extractUsername(user.name),
     role: user.role,
   }));
 

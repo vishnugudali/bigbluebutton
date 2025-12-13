@@ -17,6 +17,7 @@ import GuestWaitContainer, { GUEST_STATUSES } from '../guest-wait/component';
 import PluginTopLevelManager from '/imports/ui/components/plugin-top-level-manager/component';
 import meetingStaticData from '/imports/ui/core/singletons/meetingStaticData';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const connectionTimeout = 60000;
 const MESSAGE_TIMEOUT = 3000;
@@ -101,7 +102,7 @@ const PresenceManager: React.FC<PresenceManagerProps> = ({
       authToken,
       logoutUrl,
       sessionToken,
-      userName,
+      userName: extractUsername(userName),
       extId,
       meetingName,
     });
@@ -111,7 +112,7 @@ const PresenceManager: React.FC<PresenceManagerProps> = ({
       authToken,
       logoutUrl,
       sessionToken,
-      userName,
+      userName: extractUsername(userName),
       extId,
       meetingName,
       customLogoUrl,
@@ -176,7 +177,7 @@ const PresenceManager: React.FC<PresenceManagerProps> = ({
           ? (
             <MeetingEndedContainer
               meetingEndedCode={endedReasonCode}
-              endedBy={endedBy}
+              endedBy={extractUsername(endedBy)}
               joinErrorCode={errorCode}
             />
           )
@@ -262,7 +263,7 @@ const PresenceManagerContainer: React.FC<PresenceManagerContainerProps> = ({ chi
       logoutUrl={logoutUrl ?? ''}
       meetingId={meetingId ?? ''}
       meetingName={meetingName ?? ''}
-      userName={name ?? ''}
+      userName={extractUsername(name)}
       extId={extId ?? ''}
       userId={userId ?? ''}
       joined={joined ?? false}
@@ -270,7 +271,7 @@ const PresenceManagerContainer: React.FC<PresenceManagerContainerProps> = ({ chi
       joinErrorMessage={joinErrorMessage ?? ''}
       meetingEnded={meeting?.ended ?? false}
       endedReasonCode={meeting?.endedReasonCode ?? ''}
-      endedBy={meeting?.endedByUserName ?? ''}
+      endedBy={extractUsername(meeting.endedByUserName)}
       ejectReasonCode={ejectReasonCode ?? ''}
       bannerColor={bannerColor ?? ''}
       bannerText={bannerText ?? ''}

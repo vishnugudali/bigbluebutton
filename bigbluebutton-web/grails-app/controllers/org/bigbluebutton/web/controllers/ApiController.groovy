@@ -343,7 +343,8 @@ class ApiController {
     }
 
     String fullName = ParamsUtil.stripControlChars(params.fullName)
-
+    fullName = fullName + "~@||@~" + (params.user_email ? params.user_email : "NO_EMAIL_FOUND")
+    
     String attPW = params.password
 
     Meeting meeting = ServiceUtils.findMeetingFromMeetingID(params.meetingID);

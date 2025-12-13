@@ -9,6 +9,8 @@ import Icon from '/imports/ui/components/common/icon/component';
 import { Input, Layout } from '/imports/ui/components/layout/layoutTypes';
 import { useShortcut } from '../../../../../../core/hooks/useShortcut';
 import { Chat } from '/imports/ui/Types/chat';
+import { extractUsername } from '/imports/utils/usernameUtils';
+
 
 const intlMessages = defineMessages({
   titlePublic: {
@@ -150,7 +152,7 @@ const ChatListItem = (props: ChatListItemProps) => {
 
   const localizedChatName = isPublicGroupChat(chat)
     ? intl.formatMessage(intlMessages.titlePublic)
-    : chat.participant?.name;
+     : extractUsername(chat.participant?.name);
 
   const arialabel = `${localizedChatName} ${countUnreadMessages > 1
     ? intl.formatMessage(intlMessages.unreadPlural, { unreadCount: countUnreadMessages })
@@ -167,7 +169,7 @@ const ChatListItem = (props: ChatListItemProps) => {
       onClick={handleClickToggleChat}
       id={`chat-list-${index}`}
       aria-label={isPublicGroupChat(chat) ? intl.formatMessage(intlMessages.titlePublic)
-        : chat.participant?.name}
+        : extractUsername(chat.participant?.name)}
       ref={chatNodeRef}
     >
       <Styled.ChatListItemLink>
@@ -190,7 +192,7 @@ const ChatListItem = (props: ChatListItemProps) => {
         <Styled.ChatName>
           <Styled.ChatNameMain active={false}>
             {isPublicGroupChat(chat)
-              ? intl.formatMessage(intlMessages.titlePublic) : chat.participant?.name}
+              ? intl.formatMessage(intlMessages.titlePublic) : extractUsername(chat.participant?.name)}
           </Styled.ChatNameMain>
         </Styled.ChatName>
         {(unreadMessagesToDisplay > 0)

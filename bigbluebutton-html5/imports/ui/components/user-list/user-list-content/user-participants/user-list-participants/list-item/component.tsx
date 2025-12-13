@@ -19,6 +19,7 @@ import { useIsReactionsEnabled } from '/imports/ui/services/features';
 import useWhoIsTalking from '/imports/ui/core/hooks/useWhoIsTalking';
 import useWhoIsUnmuted from '/imports/ui/core/hooks/useWhoIsUnmuted';
 import { getSettingsSingletonInstance } from '/imports/ui/services/settings';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const messages = defineMessages({
   moderator: {
@@ -279,8 +280,8 @@ const UserListItem: React.FC<UserListItemProps> = ({ user, lockSettings, index }
       </Styled.Avatar>
       <Styled.UserNameContainer>
         <Styled.UserName>
-          <TooltipContainer title={user.name} role="button">
-            <span>{user.name}</span>
+          <TooltipContainer title={extractUsername(user.name)} role="button">
+            <span>{extractUsername(user.name)}</span>
           </TooltipContainer>
           &nbsp;
           {(user.userId === Auth.userID) ? `(${intl.formatMessage(messages.you)})` : ''}
