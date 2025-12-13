@@ -21,6 +21,7 @@ import { useIsPollingEnabled } from '../../services/features';
 import logger from '/imports/startup/client/logger';
 import connectionStatus from '../../core/graphql/singletons/connectionStatus';
 import useMeeting from '../../core/hooks/useMeeting';
+import { applyComprehensiveMasking } from '/imports/utils/maskingUtils';
 
 const intlMessages = defineMessages({
   pollingTitleLabel: {
@@ -390,7 +391,7 @@ const PollingGraphqlContainer: React.FC = () => {
     pollSubmitUserTypedVote({
       variables: {
         pollId,
-        answer,
+        answer: applyComprehensiveMasking(answer),
       },
     });
   };

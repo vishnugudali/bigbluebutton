@@ -3,6 +3,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import Styled, { DeleteMessage } from './styles';
 import { ChatEvents } from '/imports/ui/core/enums/chat';
 import { getFirstVisibleLineHtml } from '/imports/ui/components/chat/chat-graphql/service';
+import { extractUsername } from '/imports/utils/usernameUtils'
 
 const intlMessages = defineMessages({
   deleteMessage: {
@@ -51,7 +52,7 @@ const ChatMessageReplied: React.FC<MessageRepliedProps> = (props) => {
       )}
       {deletedByUser && (
         <DeleteMessage>
-          {intl.formatMessage(intlMessages.deleteMessage, { userName: deletedByUser })}
+          {intl.formatMessage(intlMessages.deleteMessage, { userName: extractUsername(deletedByUser) })}
         </DeleteMessage>
       )}
     </Styled.Container>

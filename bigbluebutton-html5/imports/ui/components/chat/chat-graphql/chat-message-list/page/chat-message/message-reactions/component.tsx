@@ -9,6 +9,8 @@ import Styled from './styles';
 import useCurrentUser from '/imports/ui/core/hooks/useCurrentUser';
 import ReactionItem from './reaction-item/component';
 import KEY_CODES from '/imports/utils/keyCodes';
+import { extractUsername } from '/imports/utils/usernameUtils';
+
 
 interface ChatMessageReactionsProps {
   reactions: {
@@ -104,7 +106,7 @@ const ChatMessageReactions: React.FC<ChatMessageReactionsProps> = (props) => {
         if (!newValue[reactionEmoji]) {
           newValue[reactionEmoji] = {
             count: 1,
-            userNames: reactedByMe ? [] : [user.name],
+            userNames: reactedByMe ? [] : [extractUsername(user.name)],
             reactedByMe,
             reactionEmoji,
             leastRecent: new Date(createdAt).getTime(),

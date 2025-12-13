@@ -1,6 +1,7 @@
 import { makeVar, ReactiveVar } from '@apollo/client';
 import logger from '/imports/startup/client/logger';
 import { User } from '/imports/ui/Types/user';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 type NetworkData = {
   ready: boolean;
@@ -293,7 +294,7 @@ class ConnectionStatus {
         isModerator: user.isModerator,
         color: user.color,
         currentlyInMeeting: user.currentlyInMeeting,
-        name: user.name,
+        name: extractUsername(user.name),
       },
       lastUnstableStatus,
       lastUnstableStatusAt,

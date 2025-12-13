@@ -8,6 +8,7 @@ import ScreenshareService from '/imports/ui/components/screenshare/service';
 import VideoService from '/imports/ui/components/video-provider/service';
 import connectionStatus from '../../core/graphql/singletons/connectionStatus';
 import getStatus from '../../core/utils/getStatus';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   saved: {
@@ -223,7 +224,7 @@ export const getNetworkData = async () => {
 
   const user = {
     time: new Date(),
-    username: Auth.username,
+    username: extractUsername(Auth.username),
     meeting_name: Auth.confname,
     meeting_id: Auth.meetingID,
     connection_id: Auth.connectionID,

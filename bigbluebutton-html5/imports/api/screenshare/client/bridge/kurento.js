@@ -7,6 +7,7 @@ import { SCREENSHARING_ERRORS } from './errors';
 import { shouldForceRelay } from '/imports/ui/services/bbb-webrtc-sfu/utils';
 import MediaStreamUtils from '/imports/utils/media-stream-utils';
 import { notifyStreamStateChange } from '/imports/ui/services/bbb-webrtc-sfu/stream-state-service';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const BRIDGE_NAME = 'kurento'
 const SCREENSHARE_VIDEO_TAG = 'screenshareVideo';
@@ -279,7 +280,7 @@ export default class KurentoScreenshareBridge {
     const iceServers = await BridgeService.getIceServers(Auth.sessionToken);
     const brokerOptions = {
       iceServers,
-      userName: Auth.fullname,
+      userName: extractUsername(Auth.fullname),
       hasAudio: options.hasAudio,
       offering: OFFERING,
       mediaServer: BridgeService.getMediaServerAdapter(),
@@ -361,7 +362,7 @@ export default class KurentoScreenshareBridge {
       const iceServers = await BridgeService.getIceServers(Auth.sessionToken);
       const options = {
         iceServers,
-        userName: Auth.fullname,
+        userName: extractUsername(Auth.fullname),
         stream,
         hasAudio: this.hasAudio,
         contentType: contentType,

@@ -43,6 +43,7 @@ import useToggleVoice from '/imports/ui/components/audio/audio-graphql/hooks/use
 import useWhoIsUnmuted from '/imports/ui/core/hooks/useWhoIsUnmuted';
 import { notify } from '/imports/ui/services/notification';
 import { useModalRegistration } from '/imports/ui/core/singletons/modalController';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 interface UserActionsProps {
   userListDropdownItems: PluginSdk.UserListDropdownInterface[];
@@ -374,7 +375,7 @@ const UserActions: React.FC<UserActionsProps> = ({
     {
       allowed: true,
       key: 'userName',
-      label: user.name,
+      label: extractUsername(user.name),
       titleActions,
       isTitle: true,
     },
@@ -563,8 +564,8 @@ const UserActions: React.FC<UserActionsProps> = ({
     {
       allowed: allowedToChangeUserLockStatus,
       key: 'unlockUser',
-      label: userLocked ? intl.formatMessage(messages.UnlockUserLabel, { userName: user.name })
-        : intl.formatMessage(messages.LockUserLabel, { userName: user.name }),
+      label: userLocked ? intl.formatMessage(messages.UnlockUserLabel, { userName: extractUsername(user.name) })
+        : intl.formatMessage(messages.LockUserLabel, { userName: extractUsername(user.name) }),
       onClick: () => {
         setLocked({
           variables: {
@@ -576,11 +577,13 @@ const UserActions: React.FC<UserActionsProps> = ({
       },
       icon: userLocked ? 'unlock' : 'lock',
       dataTest: 'unlockUserButton',
+      disabled: true,
+
     },
     {
       allowed: allowedToRemove && type === 'participant',
       key: 'remove',
-      label: intl.formatMessage(messages.RemoveUserLabel, { 0: user.name }),
+      label: intl.formatMessage(messages.RemoveUserLabel, { 0: extractUsername(user.name) }),
       onClick: () => {
         setIsConfirmationModalOpen(true);
         setOpenUserAction(null);
@@ -669,7 +672,7 @@ const UserActions: React.FC<UserActionsProps> = ({
       {isConfirmationModalOpen ? (
         <ConfirmationModal
           intl={intl}
-          title={intl.formatMessage(messages.removeUserConfirmation, { userName: user.name })}
+          title={intl.formatMessage(messages.removeUserConfirmation, { userName: extractUsername(user.name) })}
           checkboxMessageId="app.userlist.menu.removeConfirmation.desc"
           confirmParam={user.userId}
           onConfirm={removeUser}

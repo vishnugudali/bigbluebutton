@@ -13,6 +13,7 @@ import {
 } from '/imports/ui/components/audio/audio-graphql/audio-controls/input-stream-live-selector/service';
 import useIsAudioConnected from '/imports/ui/components/audio/audio-graphql/hooks/useIsAudioConnected';
 import meetingStaticData from '../../core/singletons/meetingStaticData';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const MUTED_KEY = 'muted';
 export const CLIENT_DID_USER_SELECT_MICROPHONE_KEY = 'clientUserSelectedMicrophone';
@@ -94,7 +95,7 @@ const init = (
     meetingId,
     userId,
     sessionToken,
-    username,
+    username: extractUsername(username),
     voiceBridge,
     speechLocale,
   };

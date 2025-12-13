@@ -1,4 +1,5 @@
 import Storage from '/imports/ui/services/storage/session';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 export const JoinErrorCodeTable = {
   NOT_EJECT: 'not_eject_reason',
@@ -29,7 +30,7 @@ export const setUserDataToSessionStorage = (userData: {
   sessionStorage.setItem('userId', userData.userId);
   sessionStorage.setItem('logoutUrl', userData.logoutUrl);
   sessionStorage.setItem('sessionToken', userData.sessionToken);
-  sessionStorage.setItem('userName', userData.userName);
+  sessionStorage.setItem('userName', extractUsername(userData.userName));
   sessionStorage.setItem('extId', userData.extId);
   sessionStorage.setItem('meetingName', userData.meetingName);
   Storage.setItem('CustomLogoUrl', userData.customLogoUrl);

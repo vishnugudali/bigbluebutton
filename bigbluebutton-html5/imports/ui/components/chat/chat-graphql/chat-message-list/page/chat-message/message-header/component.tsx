@@ -3,6 +3,7 @@ import { useIntl, defineMessages, FormattedTime } from 'react-intl';
 import Icon from '/imports/ui/components/common/icon/component';
 import Styled from './styles';
 import Tooltip from '/imports/ui/components/common/tooltip/container';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const intlMessages = defineMessages({
   offline: {
@@ -41,7 +42,7 @@ const ChatMessageHeader: React.FC<ChatMessageHeaderProps> = ({
     <Styled.HeaderContent role={role}>
       <Styled.ChatHeaderText>
         <Styled.ChatUserName currentlyInMeeting={currentlyInMeeting}>
-          {name}
+          {extractUsername(name)}
         </Styled.ChatUserName>
         {
           currentlyInMeeting ? null : (
