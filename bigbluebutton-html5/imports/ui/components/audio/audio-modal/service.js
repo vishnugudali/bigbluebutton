@@ -2,13 +2,15 @@ import Service, {
   setUserSelectedMicrophone,
   setUserSelectedListenOnly,
 } from '/imports/ui/components/audio/service';
-
+import Storage from '/imports/ui/services/storage/session';
 export const joinMicrophone = (options = {}) => {
   const { skipEchoTest = false } = options;
   const shouldSkipEcho = skipEchoTest && Service.inputDeviceId() !== 'listen-only';
 
   setUserSelectedMicrophone(true);
   setUserSelectedListenOnly(false);
+
+  Storage.removeItem('breakoutRoomAudioUserLeft');
 
   const {
     enabled: LOCAL_ECHO_TEST_ENABLED,
@@ -36,6 +38,8 @@ export const joinMicrophone = (options = {}) => {
 export const joinListenOnly = () => {
   setUserSelectedMicrophone(false);
   setUserSelectedListenOnly(true);
+
+  Storage.removeItem('breakoutRoomAudioUserLeft');
 
   return Service.joinListenOnly().then(() => {
     // Autoplay block wasn't triggered. Close the modal. If autoplay was

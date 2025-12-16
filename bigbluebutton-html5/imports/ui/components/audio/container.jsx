@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Session from '/imports/ui/services/storage/in-memory';
+import Storage from '/imports/ui/services/storage/session';
 import { injectIntl, defineMessages } from 'react-intl';
 import { range } from '/imports/utils/array-utils';
 import { useMeetingIsBreakout } from '/imports/ui/components/app/service';
@@ -252,7 +253,9 @@ const AudioContainer = (props) => {
     if (!lockSettingsLoaded) return;
     init().then(() => {
       // Skip auto join audio if user has already joined in another tab (currentUserHasVoice)
-      if (meetingIsBreakout && !Service.isUsingAudio() && !currentUserHasVoice) {
+      // or has intentionally left audio in a breakout room.
+      const userLeftAudioIntentionally = Storage.getItem('breakoutRoomAudioUserLeft');
+      if (meetingIsBreakout && !Service.isUsingAudio() && !currentUserHasVoice && !userLeftAudioIntentionally) {
         joinAudio();
       }
     });

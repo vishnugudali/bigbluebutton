@@ -23,9 +23,11 @@ const TOGGLE_MUTE_DEBOUNCE_TIME = 500;
 export const SPEAKER_LEVEL_KEY = 'speakerLevel';
 
 export const handleLeaveAudio = (meetingIsBreakout: boolean) => {
-  if (!meetingIsBreakout) {
-    setUserSelectedMicrophone(false);
-    setUserSelectedListenOnly(false);
+  setUserSelectedMicrophone(false);
+  setUserSelectedListenOnly(false);
+  
+  if (meetingIsBreakout) {
+    Storage.setItem('breakoutRoomAudioUserLeft', true);
   }
 
   const skipOnFistJoin = getFromUserSettings(
