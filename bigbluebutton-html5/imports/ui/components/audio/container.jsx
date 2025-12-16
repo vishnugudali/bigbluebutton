@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Session from '/imports/ui/services/storage/in-memory';
+import Storage from '/imports/ui/services/storage/session';
 import { injectIntl, defineMessages } from 'react-intl';
 import { range } from '/imports/utils/array-utils';
 import { useMeetingIsBreakout } from '/imports/ui/components/app/service';
@@ -241,7 +242,8 @@ const AudioContainer = (props) => {
     // If the user has duplicated the session and has already joined the audio.
     if (!currentUser?.voice) {
       init().then(() => {
-        if (meetingIsBreakout && !Service.isUsingAudio()) {
+	const userLeftAudioIntentionally = Storage.getItem('breakoutRoomAudioUserLeft');
+        if (meetingIsBreakout && !Service.isUsingAudio() && !userLeftAudioIntentionally) {
           joinAudio();
         }
       });
