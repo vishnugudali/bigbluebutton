@@ -90,7 +90,7 @@ export const useStreams = () => {
     return {
       stream: streamId ?? '',
       deviceId: streamId?.split?.('_')?.[3] ?? '',
-      name: user?.name || '',
+      name: extractUsername(user?.name || ''),
       nameSortable: user?.nameSortable || '',
       userId: user?.userId || '',
       user,

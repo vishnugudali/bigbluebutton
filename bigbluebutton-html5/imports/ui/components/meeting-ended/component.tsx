@@ -25,6 +25,7 @@ import apolloContextHolder from '/imports/ui/core/graphql/apolloContextHolder/ap
 import useMeeting from '../../core/hooks/useMeeting';
 import useCurrentUser from '../../core/hooks/useCurrentUser';
 import { extractUsername } from '/imports/utils/usernameUtils';
+import useUserSettings from '/imports/ui/core/local-states/useUserSettings';
 
 
 const intlMessage = defineMessages({
@@ -164,6 +165,7 @@ interface MeetingEndedProps extends MeetingEndedContainerProps {
   learningDashboardBase: string;
   isBreakout: boolean;
   allowRedirect: boolean;
+  email:string;
 }
 
 const MeetingEnded: React.FC<MeetingEndedProps> = ({
@@ -177,6 +179,7 @@ const MeetingEnded: React.FC<MeetingEndedProps> = ({
   learningDashboardBase,
   isBreakout,
   allowRedirect,
+  email,
 }) => {
   const loadingContextInfo = useContext(LoadingContext);
   const intl = useIntl();
@@ -199,9 +202,22 @@ const MeetingEnded: React.FC<MeetingEndedProps> = ({
     if (isBreakout) window.close();
     if (allowRedirect) {
       const reason = generateEndMessage(joinErrorCode, meetingEndedCode, extractUsername(endedBy));
-      const finalUrl = reason
-        ? `${logoutUrl}${logoutUrl.includes('?') ? '&' : '?'}reason=${encodeURIComponent(reason)}`
+      const separator = logoutUrl.includes('?') ? '&' : '?';
+      let finalUrl = reason
+        ? `${logoutUrl}${separator}reason=${encodeURIComponent(reason)}`
         : logoutUrl;
+      if (email) {
+        finalUrl += `${finalUrl.includes('?') ? '&' : '?'}email=${encodeURIComponent(email)}`;
+      }
+     
+     const hostname = window.location.hostname;
+      if (hostname) {
+        finalUrl += `&hostname=${encodeURIComponent(hostname)}`;
+      }
+       logger.info({
+        logCode: 'meeting_ended_redirect',
+        extraInfo: { finalUrl, hostname },
+      }, `MeetingEnded: redirecting to ${finalUrl} (hostname: ${hostname})`); 
       window.location.href = finalUrl;
     }
   };
@@ -353,8 +369,11 @@ const MeetingEndedContainer: React.FC<MeetingEndedContainerProps> = ({
   } = useCurrentUser((u) => ({
     isModerator: u.isModerator,
     logoutUrl: u.logoutUrl,
+    extId: u.extId,
   }));
 
+  const [userSettings] = useUserSettings();
+  
   if (meetingEndLoading || !meetingEndData || currentUserLoading || !currentUserData) {
     return null;
   }
@@ -373,6 +392,7 @@ const MeetingEndedContainer: React.FC<MeetingEndedContainerProps> = ({
         logoutUrl=""
         learningDashboardBase=""
         isBreakout={false}
+        email=""
       />
     );
   }
@@ -383,11 +403,19 @@ const MeetingEndedContainer: React.FC<MeetingEndedContainerProps> = ({
   const {
     isModerator,
     logoutUrl,
+    extId,
   } = currentUserData;
+
+  if (!user_current || user_current.length === 0) {
+    logger.warn('MeetingEndedContainer: user_current is empty, cannot render meeting ended screen.');
+    return null;
+  }
 
   const {
     learningDashboard,
-  } = user_current[0].meeting;
+  } = user_current[0].meeting ?? { learningDashboard: null };
+
+  const email = typeof userSettings.bbb_email === 'string' ? userSettings.bbb_email : '';
 
   const {
     skipMeetingEnded,
@@ -408,6 +436,7 @@ const MeetingEndedContainer: React.FC<MeetingEndedContainerProps> = ({
       logoutUrl={logoutUrl ?? ''}
       learningDashboardBase={learningDashboardBase}
       isBreakout={meetingData?.isBreakout ?? false}
+      email={email}
     />
   );
 };
