@@ -19,6 +19,7 @@ import { CURRENT_PRESENTATION_PAGE_SUBSCRIPTION, CurrentPresentationPagesSubscri
 import { LockSettings, UsersPolicies } from '/imports/ui/Types/meeting';
 import { User } from '/imports/ui/Types/user';
 import deviceInfo from '/imports/utils/deviceInfo';
+import { extractUsername } from '/imports/utils/usernameUtils';
 
 const { isMobile } = deviceInfo;
 
@@ -118,7 +119,7 @@ const RaisedHandsComponent: React.FC<RaisedHandsComponentProps> = ({
           <UserListStyles.UserNameContainer>
             <UserListStyles.UserName>
               <span>
-                {user.name}
+                {extractUsername(user.name)}
               </span>
               &nbsp;
               {(user.userId === Auth.userID) ? `(${intl.formatMessage(intlMessages.you)})` : ''}

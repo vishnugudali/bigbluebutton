@@ -7,6 +7,10 @@ export interface MeetingEndDataResponse {
         learningDashboardAccessToken: string;
       }
     };
+    userMetadata: Array<{
+      parameter: string;
+      value: string;
+    }>;
   }>;
 }
 
@@ -17,6 +21,10 @@ query getMeetingEndData {
       learningDashboard {
         learningDashboardAccessToken
       }
+    }
+    userMetadata {
+      parameter
+      value
     }
   }
 }
