@@ -185,7 +185,7 @@ export const useInfo = () => {
   const voiceBridge = data?.voiceSettings ? data.voiceSettings.voiceConf : null;
   return {
     userId: Auth.userID as string,
-    userName: extractUsername(Auth.fullname) as string,
+    userName: extractUsername(Auth.fullname as string) as string,
     meetingId: Auth.meetingID as string,
     sessionToken: Auth.sessionToken as string,
     voiceBridge,

@@ -369,7 +369,6 @@ const MeetingEndedContainer: React.FC<MeetingEndedContainerProps> = ({
   } = useCurrentUser((u) => ({
     isModerator: u.isModerator,
     logoutUrl: u.logoutUrl,
-    extId: u.extId,
   }));
 
   const [userSettings] = useUserSettings();
@@ -403,7 +402,6 @@ const MeetingEndedContainer: React.FC<MeetingEndedContainerProps> = ({
   const {
     isModerator,
     logoutUrl,
-    extId,
   } = currentUserData;
 
   if (!user_current || user_current.length === 0) {

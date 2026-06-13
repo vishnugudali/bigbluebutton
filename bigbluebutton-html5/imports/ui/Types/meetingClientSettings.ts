@@ -44,6 +44,7 @@ export interface App {
   skipCheckOnJoin: boolean
   enableDynamicAudioDeviceSelection: boolean
   clientTitle: string
+  appName: string
   bbbServerVersion: string
   displayBbbServerVersion: boolean
   copyright: string

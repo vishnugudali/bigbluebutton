@@ -147,9 +147,10 @@ const StartPollButton: React.FC<StartPollButtonProps> = ({
           setError(err);
         } else {
           setIsPolling(true);
- let validatedQuestion = '';
-          if (question.trim() !== '') {
-            validatedQuestion = applyComprehensiveMasking(question);
+          let validatedQuestion = '';
+          const questionText = Array.isArray(question) ? question.join(' ') : question;
+          if (questionText.trim() !== '') {
+            validatedQuestion = applyComprehensiveMasking(questionText);
           }
 
           const verifiedPollType = checkPollType(
